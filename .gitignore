@@ -1,4 +1,4 @@
-# Build output
+# Build output (keep dist/ committed for run-ready exe + setup)
 bin/
 obj/
 publish/
@@ -18,10 +18,12 @@ packages/
 # User-specific files
 *.rsuser
 
-# Local publish / installer output
+# Local publish / installer scratch (outside dist/)
 publish-output/
 InstallerOutput/
-dist/
+
+# Debug symbols in published app (optional size save)
+dist/app/**/*.pdb
 
 # Local SQLite / certs (runtime)
 *.db
