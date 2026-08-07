@@ -1,0 +1,12 @@
+{
+  "name": "Otargi Inventory",
+  "short_name": "Otargi",
+  "description": "Otargi Inventory Management — web portal",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f1f5f9",
+  "theme_color": "#10B981",
+  "icons": [],
+  "categories": ["business", "productivity"]
+}

@@ -1,0 +1,30 @@
+# Build output
+bin/
+obj/
+publish/
+build_output.txt
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+packages/
+*.nupkg
+
+# User-specific files
+*.rsuser
+
+# Local publish / installer output
+publish-output/
+InstallerOutput/
+dist/
+
+# Local SQLite / certs (runtime)
+*.db
+*.db-shm
+*.db-wal
+Database/
