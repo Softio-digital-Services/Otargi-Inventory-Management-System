@@ -114,18 +114,13 @@ namespace InventorySystem.Services
 
         public DataTable GetTopSellingItems(int limit = 5)
         {
-            int take = Math.Max(1, Math.Min(limit, 50));
             string sql = $@"
-                SELECT p.part_name AS name,
-                       SUM(oi.quantity) AS qtySold,
-                       SUM(oi.quantity * oi.price) AS totalSales
+                SELECT p.part_name, SUM(oi.quantity) as total_sold
                 FROM order_items oi
                 INNER JOIN parts p ON oi.part_id = p.id
-                INNER JOIN orders o ON oi.order_id = o.order_id
-                WHERE COALESCE(o.status, '') NOT IN ('Cancelled', 'Draft', 'Quotation')
                 GROUP BY p.part_name
-                ORDER BY qtySold DESC
-                LIMIT {take}";
+                ORDER BY total_sold DESC
+                LIMIT {limit}";
             return DatabaseHelper.ExecuteDataTable(sql);
         }
 
@@ -221,21 +216,15 @@ namespace InventorySystem.Services
 
         // - Sales by category -
 
-        public DataTable GetSalesByCategory(int limit = 5)
+        public DataTable GetSalesByCategory()
         {
-            int take = Math.Max(1, Math.Min(limit, 50));
-            string sql = $@"
-                SELECT c.category_name AS name,
-                       SUM(oi.quantity) AS qtySold,
-                       SUM(oi.quantity * oi.price) AS totalSales
+            string sql = @"
+                SELECT c.category_name, SUM(oi.quantity * oi.price) as total_sales
                 FROM order_items oi
                 INNER JOIN parts p ON oi.part_id = p.id
                 INNER JOIN categories c ON p.category_id = c.id
-                INNER JOIN orders o ON oi.order_id = o.order_id
-                WHERE COALESCE(o.status, '') NOT IN ('Cancelled', 'Draft', 'Quotation')
                 GROUP BY c.category_name
-                ORDER BY totalSales DESC
-                LIMIT {take}";
+                ORDER BY total_sales DESC";
             return DatabaseHelper.ExecuteDataTable(sql);
         }
 

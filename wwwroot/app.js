@@ -1,4 +1,4 @@
-/* Otargi Web UI - uses Otargi SQLite backend via /api/ */
+/* Otargi Web UI - SQLite backend via /api/ */
 const API = '';
 const T = {
     en: {
@@ -18,6 +18,11 @@ const T = {
         select_all: 'Select all',
         select_barcodes_first: 'Select at least one barcode to print',
         print_destination: 'Destination',
+        print_protocol: 'Print mode',
+        print_protocol_auto: 'Auto (recommended)',
+        print_protocol_tspl: 'Thermal label (TSPL)',
+        print_protocol_escpos: 'Thermal receipt (ESC/POS)',
+        print_protocol_gdi: 'Windows printer (GDI)',
         print_copies: 'Copies',
         print_layout: 'Layout',
         print_portrait: 'Portrait',
@@ -36,7 +41,7 @@ const T = {
         users_subtitle: 'Accounts and roles', settings_subtitle: 'Language, license and appearance',
         recent_sales: 'Recent Sales', add_product: 'Add Product', add_expense: 'Add Expense',
         search_ph: 'Search...', cart_title: 'Cart', clear: 'Clear', subtotal: 'Subtotal', total: 'Total',
-        checkout: 'Checkout', cancel: 'Cancel', save: 'Save', print: 'Print', convert: 'Convert',
+        checkout: 'Checkout', cancel: 'Cancel', save: 'Save', print: 'Print', convert: 'Confirm',
         process_return: 'Process Return', return_reason: 'Reason', return_reason_ph: 'e.g. Defective',
         confirm_return: 'Confirm Return', language: 'Language', license_info: 'License',
         top_products: 'Top Products', best_selling: 'Best Selling Products', top_categories: 'Top Categories',
@@ -59,7 +64,7 @@ const T = {
         return: 'Return', empty_cart: 'Cart is empty', empty_list: 'No records',
         login_failed: 'Invalid username or password', checkout_ok: 'Sale completed',
         checkout_fail: 'Checkout failed', product_ok: 'Product added', return_ok: 'Return processed',
-        expense_ok: 'Expense saved', convert_ok: 'Converted to order',
+        expense_ok: 'Expense saved', convert_ok: 'Confirmed — converted to order',
         today_sales: 'Today Sales', inventory_value: 'Inventory Value', total_items: 'Total Items',
         low_stock_count: 'Low Stock', orders_today: 'Orders Today',
         rep_sales: 'Sales', rep_cost: 'Cost', rep_expenses: 'Expenses', rep_profit: 'Profit',
@@ -70,7 +75,7 @@ const T = {
         refresh: 'Refresh', add_category: 'Add Category', add_customer: 'Add Customer',
         add_supplier: 'Add Supplier', add_user: 'Add User', add_currency: 'Add Currency',
         edit: 'Edit', delete: 'Delete', confirm_delete: 'Delete this record?', confirm_title: 'Please confirm', confirm_btn: 'Confirm', import: 'Import',
-        refresh_rates: 'Refresh Rates', view: 'View', deleted_ok: 'Deleted', saved_ok: 'Saved',
+        refresh_rates: 'Refresh Rates', view: 'View', deleted_ok: 'Deleted', saved_ok: 'Saved', import_ok: 'Imported',
         view_order: 'View Order', col_address: 'Address', edit_product: 'Edit Product',
         quote_preview_title: 'Quotation Preview', quote_preview_quote: 'QUOTATION',
         quote_preview_cust_header: 'Customer Details', quote_col_photo: 'Photo', quote_col_desc: 'Item Description',
@@ -79,7 +84,7 @@ const T = {
         quote_terms_head: 'TERMS AND CONDITIONS',
         quote_terms_body: '• Validity: 15 days from issue.\n• Payment due prior to delivery.\n• Acceptance indicates billing confirmation.\n\nAccepted By: __________________________',
         quote_tax_extras: 'Tax / Extras', grand_total: 'GRAND TOTAL', preview: 'Preview',
-        tool_backup: 'Backup', tool_about: 'About', backup_now: 'Create Backup',
+        tool_backup: 'Backup', tool_about: 'About', backup_now: 'Create Backup', factory_reset: 'Factory Delete', confirm_factory_1: 'Delete ALL data and reset the database? This cannot be undone.', confirm_factory_2: 'Final confirmation: wipe everything and start empty?', factory_ok: 'Database reset', factory_fail: 'Factory reset failed', backup_export_ok: 'Backup exported', backup_import_ok: 'Backup imported',
         open_backup_folder: 'Open Folder', backup_ok: 'Backup created', backup_fail: 'Backup failed',
         no_notifications: 'No notifications', clear_all_notifications: 'Clear all',
         clear_notification: 'Clear', confirm_clear_notifications: 'Clear all notifications?',
@@ -92,6 +97,7 @@ const T = {
         license_subtitle: 'Enter your license key to activate this machine.',
         license_ok: 'License activated successfully', license_invalid: 'Invalid license key',
         trial_ok: 'Trial started', trial_used: 'Trial already used', copied: 'Copied',
+        cannot_delete_super_admin: 'Super Admin cannot be deleted',
         about_us: 'About Us', about_app_name: 'Otargi Inventory',
         about_version: 'Version 1.0.2 Platinum',
         about_desc: 'A comprehensive Inventory and Sales Management System designed to meet the needs of SMBs. Features modern UI, real-time sync, and multi-language support.',
@@ -126,10 +132,65 @@ const T = {
         delete_draft: 'Delete', load_draft: 'Open', no_drafts: 'No draft orders',
         bulk_delete: 'Bulk Delete', filter_all: 'All', filter_low_stock: 'Low Stock', filter_active: 'Active Only',
         col_image: 'Image', col_min_stock: 'Min Stock', col_location: 'Location', col_cost: 'Cost', col_supplier: 'Supplier',
-        upload_image: 'Upload Image', change_image: 'Change', remove_image: 'Remove', item_type: 'Type', type_product: 'Product', type_service: 'Service',
+        item_type: 'Type', type_product: 'Product', type_service: 'Service',
+        sell_by: 'How is this sold?', sell_by_piece: 'Fixed price — piece, box, or pack', sell_by_weight: 'By weight — price per kilogram',
+        sell_by_hint: 'Bulk chocolate: Price = $/kg. Stock in grams (5000 = 5 kg).',
+        sell_by_hint_piece: 'Pick the unit below (pcs / box / pack). Price is for one unit; stock is how many you have.',
+        weight_guide_title: 'Weight product setup',
+        weight_guide_1: 'Set Price / kg for this chocolate type (example: 40 = $40 for 1 kg).',
+        weight_guide_2: 'Set Stock (g) in grams (example: 5000 = 5 kg on the shelf).',
+        weight_guide_3: 'At POS: Weigh → enter kg or Read scale → Add to cart.',
+        price_per_kg: 'Price / kg', price_per_kg_hint: 'Enter the price of 1 kg. POS multiplies by the weighed amount.',
+        stock_grams: 'Stock (g)', low_level_grams: 'Low level (g)',
+        stock_grams_hint: 'Enter grams. Example: 1250 = 1.250 kg',
+        stock_units_hint: 'How many units on the shelf (pieces, boxes, or packs).',
+        uom_piece_hint: 'pcs / box / pack — price is for one unit',
+        uom_weight_hint: 'Locked to kg. Price is per kg; stock below is in grams.',
+        weigh_first: 'Product selected — enter kg or Read scale, then Add to cart',
+        weigh_need_product: 'Press Weigh on a product first',
+        weigh_need_scale: 'Enter a weight greater than 0',
+        weigh_need_read: 'Enter weight (or Read scale) first',
+        weigh_added: 'Added {0} @ {1} kg',
+        weigh_btn: 'Weigh',
+        per_kg: '/kg',
+        scale_pick_product: 'Press on a weight product below',
+        scale_weight_lbl: 'Weight (kg)', scale_price_lbl: 'Price',
+        scale_read: 'Read scale', scale_add_cart: 'Add to cart',
+        scale_selected: 'Selected',
+        scale_manual_hint: 'Type kg here if the scale is offline',
+        scale_offline_manual: 'Scale offline — type weight in kg',
+        scale_offline: 'Scale offline',
+        scale_online: 'Scale online',
+        scale_unstable: 'Scale unstable',
+        scale_settings: 'Scale settings',
+        scale_clear: 'Remove from scale',
+        scale_tare: 'Tare',
+        scale_zero: 'Zero',
+        scale_tare_hint: 'Ignore container weight',
+        scale_zero_hint: 'Reset empty scale to zero',
+        scale_port: 'Port',
+        scale_baud: 'Baud',
+        scale_auto_connect: 'Auto-connect',
+        scale_connect: 'Connect',
+        scale_disconnect: 'Disconnect',
+        scale_sim: 'Sim',
+        scale_sim_hint: 'Simulate 0.525 kg',
+        unit_kg: 'kg',
+        weight_in_kg: 'Weight in kg',
+        scale_connected: 'Scale connected',
+        scale_connect_failed: 'Scale connect failed',
+        scale_disconnected: 'Scale disconnected',
+        scale_api_unavailable: 'Scale API unavailable',
+        scale_weighed_toast: '{0}: {1} {2} → {3}',
+        scale_simulated: 'Simulated {0} {1}',
+        scale_manual_set: 'Manual {0} {1}',
+        upload_image: 'Upload Image', change_image: 'Change', remove_image: 'Remove',
         settings: 'Settings', sales_item: 'Sales item', purchase_item: 'Purchase item', inactive: 'Inactive',
         tax_rate: 'Tax Rate', expiry_date: 'Expiry Date', auto_sku: 'Auto', scan: 'Scan', batch_no: 'Batch No.',
-        shelf: 'Shelf', uom: 'Unit of Measure', stock_control: 'Stock control', track_stock: 'Track stock',
+        shelf: 'Shelf', uom: 'Unit of Measure', add_uom: 'Add Unit of Measure',
+        add_uom_hint: 'Enter a custom unit name (e.g. carton, dozen).',
+        uom_added: 'Unit added', uom_exists: 'Unit already exists', add: 'Add',
+        stock_control: 'Stock control', track_stock: 'Track stock',
         low_level: 'Low level', prices: 'Prices', price_level: 'Level', gross_pct: 'Gross %',
         price1: 'Price 1', price2: 'Price 2', price3: 'Price 3', price4: 'Price 4',
         add_service: 'Add Service', edit_service: 'Edit Service', credit_limit: 'Credit Limit',
@@ -160,7 +221,8 @@ const T = {
         no_products: 'No products found.',
         scan_to_connect: 'Scan to Connect',
         scan_to_connect_hint: 'Same Wi‑Fi — open the full Otargi app on phone or tablet.',
-        copy_url: 'Copy URL'
+        copy_url: 'Copy URL',
+        loading: 'Loading…'
     },
     ar: {
         login_title: 'تسجيل الدخول', login_subtitle: 'بوابة إدارة المخزون',
@@ -179,6 +241,11 @@ const T = {
         select_all: 'تحديد الكل',
         select_barcodes_first: 'حدد باركوداً واحداً على الأقل للطباعة',
         print_destination: 'الوجهة',
+        print_protocol: 'وضع الطباعة',
+        print_protocol_auto: 'تلقائي (موصى به)',
+        print_protocol_tspl: 'ملصق حراري (TSPL)',
+        print_protocol_escpos: 'إيصال حراري (ESC/POS)',
+        print_protocol_gdi: 'طابعة ويندوز (GDI)',
         print_copies: 'النسخ',
         print_layout: 'الاتجاه',
         print_portrait: 'عمودي',
@@ -197,7 +264,7 @@ const T = {
         users_subtitle: 'الحسابات والصلاحيات', settings_subtitle: 'اللغة والترخيص والمظهر',
         recent_sales: 'أحدث المبيعات', add_product: 'إضافة منتج', add_expense: 'إضافة مصروف',
         search_ph: 'بحث...', cart_title: 'السلة', clear: 'مسح', subtotal: 'المجموع الفرعي', total: 'الإجمالي',
-        checkout: 'إتمام الدفع', cancel: 'إلغاء', save: 'حفظ', print: 'طباعة', convert: 'تحويل',
+        checkout: 'إتمام الدفع', cancel: 'إلغاء', save: 'حفظ', print: 'طباعة', convert: 'تأكيد',
         process_return: 'معالجة مرتجع', return_reason: 'السبب', return_reason_ph: 'مثال: تالف',
         confirm_return: 'تأكيد المرتجع', language: 'اللغة', license_info: 'الترخيص',
         top_products: 'أفضل المنتجات', best_selling: 'الأكثر مبيعاً', top_categories: 'أفضل الفئات', mark_paid: 'تعليم الدفع', paid: 'مدفوع', unpaid: 'غير مدفوع',
@@ -219,7 +286,7 @@ const T = {
         return: 'مرتجع', empty_cart: 'السلة فارغة', empty_list: 'لا توجد سجلات',
         login_failed: 'اسم المستخدم أو كلمة المرور غير صحيحة', checkout_ok: 'تمت عملية البيع',
         checkout_fail: 'فشل الدفع', product_ok: 'تمت إضافة المنتج', return_ok: 'تمت معالجة المرتجع',
-        expense_ok: 'تم حفظ المصروف', convert_ok: 'تم التحويل إلى طلب',
+        expense_ok: 'تم حفظ المصروف', convert_ok: 'تم التأكيد وتحويل العرض إلى طلب',
         today_sales: 'مبيعات اليوم', inventory_value: 'قيمة المخزون', total_items: 'إجمالي القطع',
         low_stock_count: 'مخزون منخفض', orders_today: 'طلبات اليوم',
         rep_sales: 'المبيعات', rep_cost: 'التكلفة', rep_expenses: 'المصروفات', rep_profit: 'الربح',
@@ -230,7 +297,7 @@ const T = {
         refresh: 'تحديث', add_category: 'إضافة فئة', add_customer: 'إضافة عميل',
         add_supplier: 'إضافة مورد', add_user: 'إضافة مستخدم', add_currency: 'إضافة عملة',
         edit: 'تعديل', delete: 'حذف', confirm_delete: 'حذف هذا السجل؟', confirm_title: 'يرجى التأكيد', confirm_btn: 'تأكيد', import: 'استيراد',
-        refresh_rates: 'تحديث الأسعار', view: 'عرض', deleted_ok: 'تم الحذف', saved_ok: 'تم الحفظ',
+        refresh_rates: 'تحديث الأسعار', view: 'عرض', deleted_ok: 'تم الحذف', saved_ok: 'تم الحفظ', import_ok: 'تم الاستيراد',
         view_order: 'عرض الطلب', col_address: 'العنوان', edit_product: 'تعديل المنتج',
         quote_preview_title: 'معاينة عرض السعر', quote_preview_quote: 'عرض سعر',
         quote_preview_cust_header: 'تفاصيل العميل', quote_col_photo: 'صورة', quote_col_desc: 'وصف الصنف',
@@ -239,20 +306,21 @@ const T = {
         quote_terms_head: 'الشروط والأحكام',
         quote_terms_body: '• الصلاحية: 15 يوماً من تاريخ الإصدار.\n• الدفع مستحق قبل التسليم.\n• القبول يعني تأكيد الفوترة.\n\nتم القبول بواسطة: __________________________',
         quote_tax_extras: 'ضريبة / إضافات', grand_total: 'الإجمالي النهائي', preview: 'معاينة',
-        tool_backup: 'نسخ احتياطي', tool_about: 'حول', backup_now: 'إنشاء نسخة',
+        tool_backup: 'نسخ احتياطي', tool_about: 'حول', backup_now: 'إنشاء نسخة', factory_reset: 'حذف المصنع', confirm_factory_1: 'حذف كل البيانات وإعادة ضبط قاعدة البيانات؟ لا يمكن التراجع.', confirm_factory_2: 'تأكيد أخير: مسح كل شيء والبدء من صفر؟', factory_ok: 'تمت إعادة ضبط قاعدة البيانات', factory_fail: 'فشل حذف المصنع', backup_export_ok: 'تم تصدير النسخة', backup_import_ok: 'تم استيراد النسخة',
         open_backup_folder: 'فتح المجلد', backup_ok: 'تم إنشاء النسخة', backup_fail: 'فشل النسخ',
         no_notifications: 'لا توجد إشعارات', clear_all_notifications: 'مسح الكل',
         clear_notification: 'مسح', confirm_clear_notifications: 'مسح كل الإشعارات؟',
         locked_title: 'الشاشة مقفلة',
         locked_subtitle: 'أدخل كلمة المرور للمتابعة', unlock_btn: 'فتح القفل',
-        unlock_fail: 'كلمة المرور غير صحيحة', about_blurb: 'نظام إدارة المخزون لأوتارجي.',
+        unlock_fail: 'كلمة المرور غير صحيحة', about_blurb: 'نظام إدارة المخزون Otargi.',
         last_backup: 'آخر نسخة', backup_none: 'لا توجد نسخة بعد',
         activate_license: 'تفعيل الترخيص', activate_btn: 'تفعيل', start_trial: 'بدء التجربة',
         license_key: 'مفتاح الترخيص', machine_id: 'معرّف الجهاز', copy: 'نسخ',
         license_subtitle: 'أدخل مفتاح الترخيص لتفعيل هذا الجهاز.',
         license_ok: 'تم تفعيل الترخيص بنجاح', license_invalid: 'مفتاح الترخيص غير صالح',
         trial_ok: 'تم بدء الفترة التجريبية', trial_used: 'تم استخدام التجربة مسبقاً', copied: 'تم النسخ',
-        about_us: 'من نحن', about_app_name: 'نظام مخزون أوتارجي', about_version: 'الإصدار 1.0.2 Platinum',
+        cannot_delete_super_admin: 'لا يمكن حذف المسؤول الأعلى',
+        about_us: 'من نحن', about_app_name: 'نظام مخزون Otargi', about_version: 'الإصدار 1.0.2 Platinum',
         about_desc: 'نظام متكامل لإدارة المخازن والمبيعات، مصمم خصيصاً لتلبية احتياجات الشركات الصغيرة والمتوسطة. يتميز بواجهة عصرية ودعم كامل للغة العربية.',
         about_dev: 'تطوير بواسطة Softio Digital Transformation', about_contact: 'تواصل معنا',
         about_copyright: '© 2026 Softio Services. جميع الحقوق محفوظة.',
@@ -285,9 +353,63 @@ const T = {
         bulk_delete: 'حذف جماعي', filter_all: 'الكل', filter_low_stock: 'مخزون منخفض', filter_active: 'النشط فقط',
         col_image: 'الصورة', col_min_stock: 'الحد الأدنى', col_location: 'الموقع', col_cost: 'التكلفة', col_supplier: 'المورد',
         upload_image: 'رفع صورة', change_image: 'تغيير', remove_image: 'إزالة', item_type: 'النوع', type_product: 'منتج', type_service: 'خدمة',
+        sell_by: 'كيف يُباع؟', sell_by_piece: 'سعر ثابت — قطعة أو علبة أو عبوة', sell_by_weight: 'بالوزن — السعر لكل كيلوغرام',
+        sell_by_hint: 'شوكولا بالوزن: السعر = $/كغ. المخزون بالغرام (5000 = 5 كغ).',
+        sell_by_hint_piece: 'اختر الوحدة أدناه (قطعة / علبة / عبوة). السعر لوحدة واحدة؛ المخزون = الكمية المتوفرة.',
+        weight_guide_title: 'إعداد منتج بالوزن',
+        weight_guide_1: 'ضع السعر / كغ لهذا النوع (مثال: 40 = 40$ لكل 1 كغ).',
+        weight_guide_2: 'ضع المخزون (غ) بالغرام (مثال: 5000 = 5 كغ على الرف).',
+        weight_guide_3: 'في نقطة البيع: وزن → أدخل الكغ أو اقرأ الميزان → أضف للسلة.',
+        price_per_kg: 'السعر / كغ', price_per_kg_hint: 'أدخل سعر 1 كغ. نقطة البيع تضربه بالوزن.',
+        stock_grams: 'المخزون (غ)', low_level_grams: 'الحد الأدنى (غ)',
+        stock_grams_hint: 'أدخل الغرام. مثال: 1250 = 1.250 كغ',
+        stock_units_hint: 'عدد الوحدات على الرف (قطع أو علب أو عبوات).',
+        uom_piece_hint: 'قطعة / علبة / عبوة — السعر لوحدة واحدة',
+        uom_weight_hint: 'مثبت على كغ. السعر لكل كغ؛ المخزون أدناه بالغرام.',
+        weigh_first: 'تم اختيار المنتج — أدخل الكغ أو اقرأ الميزان ثم أضف للسلة',
+        weigh_need_product: 'اضغط وزن على منتج أولاً',
+        weigh_need_scale: 'أدخل وزناً أكبر من 0',
+        weigh_need_read: 'أدخل الوزن (أو اقرأ الميزان) أولاً',
+        weigh_added: 'أُضيف {0} @ {1} كغ',
+        weigh_btn: 'وزن',
+        per_kg: '/كغ',
+        scale_pick_product: 'اضغط على منتج بالوزن من الأسفل',
+        scale_weight_lbl: 'الوزن (كغ)', scale_price_lbl: 'السعر',
+        scale_read: 'قراءة الميزان', scale_add_cart: 'إضافة للسلة',
+        scale_selected: 'المحدد',
+        scale_manual_hint: 'اكتب الكغ هنا إذا كان الميزان غير متصل',
+        scale_offline_manual: 'الميزان غير متصل — أدخل الوزن بالكغ',
+        scale_offline: 'الميزان غير متصل',
+        scale_online: 'الميزان متصل',
+        scale_unstable: 'الميزان غير مستقر',
+        scale_settings: 'إعدادات الميزان',
+        scale_clear: 'إزالة من الميزان',
+        scale_tare: 'تارا',
+        scale_zero: 'تصفير',
+        scale_tare_hint: 'تجاهل وزن الوعاء',
+        scale_zero_hint: 'إعادة الميزان الفارغ إلى الصفر',
+        scale_port: 'المنفذ',
+        scale_baud: 'معدل الباود',
+        scale_auto_connect: 'اتصال تلقائي',
+        scale_connect: 'اتصال',
+        scale_disconnect: 'قطع الاتصال',
+        scale_sim: 'محاكاة',
+        scale_sim_hint: 'محاكاة 0.525 كغ',
+        unit_kg: 'كغ',
+        weight_in_kg: 'الوزن بالكغ',
+        scale_connected: 'تم الاتصال بالميزان',
+        scale_connect_failed: 'فشل الاتصال بالميزان',
+        scale_disconnected: 'تم قطع اتصال الميزان',
+        scale_api_unavailable: 'واجهة الميزان غير متاحة',
+        scale_weighed_toast: '{0}: {1} {2} ← {3}',
+        scale_simulated: 'تمت محاكاة {0} {1}',
+        scale_manual_set: 'يدوي {0} {1}',
         settings: 'الإعدادات', sales_item: 'عنصر مبيعات', purchase_item: 'عنصر مشتريات', inactive: 'غير نشط',
         tax_rate: 'نسبة الضريبة', expiry_date: 'تاريخ الانتهاء', auto_sku: 'تلقائي', scan: 'مسح', batch_no: 'رقم الدفعة',
-        shelf: 'الرف', uom: 'وحدة القياس', stock_control: 'التحكم بالمخزون', track_stock: 'تتبع المخزون',
+        shelf: 'الرف', uom: 'وحدة القياس', add_uom: 'إضافة وحدة قياس',
+        add_uom_hint: 'أدخل اسم وحدة مخصصة (مثل كرتون، دستة).',
+        uom_added: 'تمت إضافة الوحدة', uom_exists: 'الوحدة موجودة مسبقاً', add: 'إضافة',
+        stock_control: 'التحكم بالمخزون', track_stock: 'تتبع المخزون',
         low_level: 'الحد الأدنى', prices: 'الأسعار', price_level: 'المستوى', gross_pct: 'الإجمالي %',
         price1: 'السعر 1', price2: 'السعر 2', price3: 'السعر 3', price4: 'السعر 4',
         add_service: 'إضافة خدمة', edit_service: 'تعديل الخدمة', credit_limit: 'حد الائتمان',
@@ -317,12 +439,13 @@ const T = {
         pos_menu: 'القائمة', all_categories: 'كل الفئات', items_count: 'أصناف',
         no_products: 'لا توجد منتجات.',
         scan_to_connect: 'امسح للاتصال',
-        scan_to_connect_hint: 'نفس الواي فاي — افتح تطبيق أوتارجي بالكامل على الهاتف أو الجهاز اللوحي.',
-        copy_url: 'نسخ الرابط'
+        scan_to_connect_hint: 'نفس الواي فاي — افتح تطبيق Otargi بالكامل على الهاتف أو الجهاز اللوحي.',
+        copy_url: 'نسخ الرابط',
+        loading: 'جاري التحميل…'
     }
 };
 
-let lang = localStorage.getItem('otargi_lang') || 'en';
+let lang = localStorage.getItem('generic_lang') || localStorage.getItem('panache_lang') || localStorage.getItem('otargi_lang') || 'en';
 let currentUser = null;
 let products = [], categories = [], sales = [], customers = [], suppliers = [], users = [];
 let expenses = [], quotations = [], currencies = [], barcodeItems = [], expenseCategories = [];
@@ -336,6 +459,8 @@ let posReturnOrderId = null;
 let posReturnItemsCache = [];
 let editingProductId = null;
 let posShipping = null;
+let lastTappedProductId = null;
+let scaleState = { connected: false, weight: 0, unit: 'kg', stable: true, port: '' };
 const POS_VAT_RATE = 0.11;
 
 function productPriceTiers(p) {
@@ -344,17 +469,84 @@ function productPriceTiers(p) {
     return tiers;
 }
 
-function makeCartLine(p, qty = 1, price = null) {
+function isSellByWeight(p) {
+    return false;
+}
+
+function formatPosPrice(p) {
+    const base = money(p?.price || 0);
+    return isSellByWeight(p) ? `${base}${tr('per_kg')}` : base;
+}
+
+function formatPosStock(p) {
+    if (p.isService || p.itemType === 'Service') return tr('type_service');
+    if (!isPosProductAvailable(p)) return tr('out_of_stock');
+    if (isSellByWeight(p)) {
+        const kg = (Number(p.stock) || 0) / 1000;
+        return `${kg.toFixed(3)} ${tr('unit_kg')}`;
+    }
+    return `${p.stock} ${tr('col_stock').toLowerCase()}`;
+}
+
+function makeCartLine(p, qty = 1, price = null, opts = {}) {
     const tiers = productPriceTiers(p);
     const unit = price != null ? Number(price) : (tiers[0] || 0);
     return {
         id: p.id,
-        name: p.name,
+        name: opts.name || p.name,
         price: unit,
         qty,
         max: (p.isService || p.itemType === 'Service' || p.isStockTracked === false) ? 9999 : (Number(p.stock) || 0),
-        prices: tiers
+        prices: tiers,
+        lineKey: opts.lineKey || null,
+        weighted: !!(opts.lineKey || opts.weighted || opts.weightKg),
+        weightKg: opts.weightKg != null ? Number(opts.weightKg) : null,
+        stockQty: opts.stockQty != null ? Number(opts.stockQty) : null,
+        sellByWeight: isSellByWeight(p)
     };
+}
+
+function addToCart(id, qty = 1, opts = {}) {
+    const p = products.find(x => x.id === id); if (!p) return false;
+    lastTappedProductId = id;
+    if (!isPosProductAvailable(p) && !opts.allowZeroStock) {
+        showOutOfStockPopup(p.name);
+        return false;
+    }
+    // Weighted / price-embedded scale lines stay as separate cart rows.
+    if (opts.lineKey || opts.weighted) {
+        if (isSellByWeight(p) && opts.stockQty > 0 && p.isStockTracked !== false) {
+            if (opts.stockQty > (Number(p.stock) || 0)) {
+                showOutOfStockPopup(p.name);
+                return false;
+            }
+        }
+        const row = makeCartLine(p, qty, opts.price != null ? opts.price : null, opts);
+        cart.push(row);
+        renderCart();
+        return true;
+    }
+    if (isSellByWeight(p)) {
+        toast(tr('weigh_first'), 'info');
+        return false;
+    }
+    const line = cart.find(x => x.id === id && !x.weighted);
+    if (line) {
+        if (line.qty + qty > line.max) {
+            showOutOfStockPopup(p.name);
+            return false;
+        }
+        line.qty += qty;
+    } else {
+        const row = makeCartLine(p, qty, opts.price != null ? opts.price : null, opts);
+        if (row.qty > row.max) {
+            showOutOfStockPopup(p.name);
+            return false;
+        }
+        cart.push(row);
+    }
+    renderCart();
+    return true;
 }
 
 const exportCsv = (rows, filename) => {
@@ -372,10 +564,49 @@ const exportCsv = (rows, filename) => {
     URL.revokeObjectURL(a.href);
 };
 
+function parseCsvLine(line) {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQ) {
+            if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+            else if (ch === '"') inQ = false;
+            else cur += ch;
+        } else if (ch === '"') inQ = true;
+        else if (ch === ',') { cols.push(cur); cur = ''; }
+        else cur += ch;
+    }
+    cols.push(cur);
+    return cols;
+}
+
+async function parseCsvFile(file) {
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return { headers: [], rows: [] };
+    const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+    const rows = lines.slice(1).map(line => {
+        const cols = parseCsvLine(line);
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = (cols[i] ?? '').trim(); });
+        return obj;
+    });
+    return { headers, rows };
+}
+
+function csvCell(row, ...keys) {
+    for (const k of keys) {
+        const key = String(k || '').toLowerCase();
+        if (row[key] != null && String(row[key]).trim() !== '') return String(row[key]).trim();
+    }
+    return '';
+}
+
 const actionBtns = (editAttr, deleteAttr, extra = '') => `<div class="table-actions">
     ${extra}
-    <button type="button" class="btn-icon" title="${tr('edit')}" ${editAttr}><span class="material-symbols-rounded">edit</span></button>
-    <button type="button" class="btn-icon btn-icon-danger" title="${tr('delete')}" ${deleteAttr}><span class="material-symbols-rounded">delete</span></button>
+    <button type="button" class="btn-icon btn-icon-edit" title="${tr('edit')}" ${editAttr}><span class="material-symbols-rounded">edit</span></button>
+    <button type="button" class="btn-icon btn-icon-delete" title="${tr('delete')}" ${deleteAttr}><span class="material-symbols-rounded">delete</span></button>
 </div>`;
 
 const tr = (k) => (T[lang] && T[lang][k]) || T.en[k] || String(k || '').replace(/_/g, ' ');
@@ -449,9 +680,14 @@ function applyI18n() {
     document.body.classList.toggle('rtl', lang === 'ar');
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = tr(el.getAttribute('data-i18n')); });
     document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = tr(el.getAttribute('data-i18n-ph')); });
-    document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = tr(el.getAttribute('data-i18n-title')); });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const t = tr(el.getAttribute('data-i18n-title'));
+        el.title = t;
+        if (el.hasAttribute('aria-label') || el.getAttribute('data-i18n-aria') === '1') el.setAttribute('aria-label', t);
+    });
     const langLabel = document.getElementById('lang-label');
     if (langLabel) langLabel.textContent = lang === 'en' ? 'العربية' : 'English';
+    try { scaleManager?.render?.(); } catch { /* scale not ready yet */ }
 }
 
 function toast(msg, type = '') {
@@ -496,6 +732,22 @@ function applyRolePermissions() {
     document.querySelectorAll('[data-roles]').forEach(el => {
         el.style.display = can(el.getAttribute('data-roles')) ? '' : 'none';
     });
+}
+
+function resetClientState() {
+    products = []; categories = []; sales = []; customers = []; suppliers = []; users = [];
+    expenses = []; quotations = []; currencies = []; barcodeItems = []; expenseCategories = [];
+    dashboard = null; reportSummary = null; reportTop = [];
+    cart = [];
+    invSelected.clear();
+    barcodeSelected.clear();
+    returnOrderId = null; returnItemsCache = [];
+    blindReturnItems = [];
+    posReturnOrderId = null; posReturnItemsCache = [];
+    editingProductId = null;
+    posShipping = null;
+    posTotalManual = null;
+    window._license = null;
 }
 
 function restoreRouteFromHash() {
@@ -552,6 +804,8 @@ function hideApp() {
     if (tools) tools.hidden = true;
     currentUser = null;
     sessionStorage.removeItem('otargi_user');
+    sessionStorage.removeItem('generic_user');
+    sessionStorage.removeItem('panache_user');
     const userInput = document.getElementById('login-user');
     const passInput = document.getElementById('login-pass');
     if (userInput) userInput.value = '';
@@ -568,7 +822,13 @@ async function loadData() {
     const [p, c, s, d] = await Promise.all([
         api('/api/products?includeInactive=1'), api('/api/categories'), api('/api/recent-sales'), api('/api/dashboard')
     ]);
-    products = p || []; categories = c || []; sales = s || []; dashboard = d || {};
+    products = (p || []).map(x => ({
+        ...x,
+        sellByWeight: isSellByWeight(x) || !!(x.sellByWeight || x.sell_by_weight)
+    }));
+    // Re-normalize after mapping (uses updated sellByWeight)
+    products = products.map(x => ({ ...x, sellByWeight: isSellByWeight(x) }));
+    categories = c || []; sales = s || []; dashboard = d || {};
     try { customers = await api('/api/customers'); } catch { customers = []; }
     try { suppliers = await api('/api/suppliers'); } catch { suppliers = []; }
     try { currencies = await api('/api/currencies'); } catch { currencies = []; }
@@ -583,6 +843,7 @@ async function loadData() {
         try { users = await api('/api/users'); } catch { users = []; }
     }
     try { barcodeItems = await api('/api/barcode/items'); } catch { barcodeItems = products.map(x => ({ id: x.id, name: x.name, sku: x.sku, price: x.price, barcode: x.barcode, stock: x.stock })); }
+    await loadUoms();
     await loadLicense();
     await loadConnectInfo();
     renderAll();
@@ -711,6 +972,8 @@ function renderAll() {
 }
 
 function stockBadge(p) {
+    if (p.isService || p.itemType === 'Service') return `<span class="badge service">${tr('type_service')}</span>`;
+    if (p.isStockTracked === false) return `<span class="badge in-stock">—</span>`;
     if (p.stock <= 0) return `<span class="badge out-of-stock">${tr('out_of_stock')}</span>`;
     if (p.stock <= (p.minStock || 0)) return `<span class="badge low-stock">${tr('low_stock')}</span>`;
     return `<span class="badge in-stock">${tr('in_stock')}</span>`;
@@ -820,24 +1083,55 @@ function renderPOS() {
     grid.innerHTML = list.length ? list.map(p => {
         const img = p.image || p.categoryImage || '';
         const available = isPosProductAvailable(p);
-        const stockLabel = (p.isService || p.itemType === 'Service')
-            ? tr('type_service')
-            : (available ? `${p.stock} ${tr('col_stock').toLowerCase()}` : tr('out_of_stock'));
-        return `<div class="pos-product-card ${available ? '' : 'is-out-of-stock'}" data-id="${p.id}" data-available="${available ? '1' : '0'}">
+        const stockLabel = formatPosStock(p);
+        const byWeight = isSellByWeight(p);
+        const isService = p.isService || p.itemType === 'Service';
+        const weightClass = byWeight ? ' is-weighed' : '';
+        const selectedClass = (byWeight && lastTappedProductId === p.id) ? ' is-scale-selected' : '';
+        const weighBtn = byWeight
+            ? `<button type="button" class="btn-pos-weigh" data-weigh-id="${p.id}">${tr('weigh_btn')}</button>`
+            : '';
+        const stockClass = !available ? 'pos-oos-label' : (isService ? 'pos-service-label' : '');
+        return `<div class="pos-product-card ${available ? '' : 'is-out-of-stock'}${weightClass}${selectedClass}${isService ? ' is-service' : ''}" data-id="${p.id}" data-available="${available ? '1' : '0'}">
             <div class="pos-product-image placeholder"><span class="material-symbols-rounded">inventory_2</span>
                 ${img ? `<img src="${escapeHtml(img)}" alt="" onload="this.parentElement.classList.remove('placeholder');this.previousElementSibling.style.display='none';" onerror="this.remove();">` : ''}
             </div>
             <h3>${escapeHtml(p.name)}</h3>
-            <p class="${available ? '' : 'pos-oos-label'}">${escapeHtml(stockLabel)}</p>
-            <div class="price">${money(p.price)}</div>
+            <p class="${stockClass}">${escapeHtml(stockLabel)}</p>
+            <div class="price">${formatPosPrice(p)}</div>
+            ${weighBtn}
         </div>`;
     }).join('') : `<div class="empty-state pos-empty-products"><span class="material-symbols-rounded">inventory_2</span><div>${tr('no_products')}</div></div>`;
+
+    grid.querySelectorAll('[data-weigh-id]').forEach(btn => {
+        btn.onclick = async (e) => {
+            e.stopPropagation();
+            const id = Number(btn.dataset.weighId);
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            if (!isPosProductAvailable(p)) {
+                await showOutOfStockPopup(p.name);
+                return;
+            }
+            scaleManager.selectForWeighing(p);
+            renderPOS();
+            document.getElementById('scaleManualWeight')?.focus();
+        };
+    });
+
     grid.querySelectorAll('.pos-product-card').forEach(card => {
         card.onclick = async () => {
             const id = Number(card.dataset.id);
             const p = products.find(x => x.id === id);
             if (!isPosProductAvailable(p)) {
                 await showOutOfStockPopup(p?.name);
+                return;
+            }
+            if (isSellByWeight(p)) {
+                // Weight products: same as Weigh button (never add full $/kg as 1 pc)
+                scaleManager.selectForWeighing(p);
+                renderPOS();
+                document.getElementById('scaleManualWeight')?.focus();
                 return;
             }
             addToCart(id);
@@ -896,8 +1190,8 @@ function renderInventory() {
                 <td>${escapeHtml(p.sku || '—')}</td>
                 <td>${escapeHtml(p.barcode || '—')}</td>
                 <td>${escapeHtml(p.category || '—')}</td>
-                <td>${money(p.price)}</td>
-                <td>${p.isStockTracked === false ? '—' : p.stock}</td>
+                <td>${isSellByWeight(p) ? formatPosPrice(p) : money(p.price)}</td>
+                <td>${p.isStockTracked === false ? '—' : (isSellByWeight(p) ? `${((Number(p.stock)||0)/1000).toFixed(3)} ${tr('unit_kg')}` : p.stock)}</td>
                 <td>${p.minStock ?? 0}</td>
                 <td>${escapeHtml(p.location || '—')}</td>
                 <td>${stockBadge(p)}</td>
@@ -927,8 +1221,8 @@ function renderInventory() {
                 ${productThumb(p).replace('inv-thumb', 'inv-thumb inv-card-img')}
                 <h3>${escapeHtml(p.name)}</h3>
                 <div class="inv-card-meta">${escapeHtml(p.sku || '—')} · ${escapeHtml(p.category || '—')}</div>
-                <div class="inv-card-meta">${tr('col_stock')}: ${p.isStockTracked === false ? '—' : p.stock}</div>
-                <div class="price">${money(p.price)}</div>
+                <div class="inv-card-meta">${tr('col_stock')}: ${p.isStockTracked === false ? '—' : (isSellByWeight(p) ? `${((Number(p.stock)||0)/1000).toFixed(3)} ${tr('unit_kg')}` : p.stock)}</div>
+                <div class="price">${isSellByWeight(p) ? formatPosPrice(p) : money(p.price)}</div>
                 ${stockBadge(p)}
             </div>`).join('');
         const addCard = canEdit ? `<div class="inv-card inv-card-add" id="inv-card-add"><span class="material-symbols-rounded">add</span><span data-i18n="add_new">Add New</span></div>` : '';
@@ -965,9 +1259,44 @@ function renderPosStats() {
     if (ordersEl) ordersEl.textContent = String(d.ordersToday ?? 0);
     if (salesEl) {
         const s = Number(d.todaySales) || 0;
-        salesEl.textContent = s >= 1000 ? ('$' + Math.round(s)) : ('$' + s.toFixed(0));
+        salesEl.textContent = money(Math.max(0, s));
     }
     if (pendingEl) pendingEl.textContent = String(d.pendingOrders ?? 0);
+}
+
+function renderReports() {
+    const s = reportSummary || {};
+    const d = dashboard || {};
+    const grid = document.getElementById('report-stats');
+    if (!grid) return;
+    const rangeLabel = (s.fromDate && s.toDate)
+        ? `${toInputDate(s.fromDate)} → ${toInputDate(s.toDate)}`
+        : '';
+    const cards = [
+        { label: tr('rep_sales'), value: money(s.totalSales), sub: rangeLabel, cls: '' },
+        { label: tr('rep_cost'), value: money(s.totalCost), sub: '', cls: '' },
+        { label: tr('rep_expenses'), value: money(s.totalExpenses), sub: '', cls: '' },
+        { label: tr('rep_profit_before_expenses'), value: money(s.totalProfit), sub: '', cls: 'stat-profit' },
+        { label: tr('rep_profit_after_expenses'), value: money(s.totalProfitAfterExpenses), sub: '', cls: 'stat-profit-net' },
+        { label: tr('pos_orders'), value: String(d.ordersToday ?? 0), sub: tr('orders_today'), cls: '' },
+        { label: tr('pos_pending'), value: String(d.pendingOrders ?? 0), sub: '', cls: '' },
+    ];
+    const seen = new Set();
+    grid.innerHTML = cards.filter(c => {
+        const key = String(c.label || '').trim().toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    }).map(c => `
+        <div class="stat-card ${c.cls || ''}"><div class="label">${escapeHtml(c.label)}</div><div class="value">${c.value}</div>
+            ${c.sub ? `<div class="stat-sub">${escapeHtml(c.sub)}</div>` : ''}</div>`).join('');
+    const rows = reportTop || [];
+    document.getElementById('report-top-body').innerHTML = rows.length ? rows.map(r => `
+        <tr><td>${escapeHtml(r.product_name || r.ProductName || '')}</td>
+        <td>${r.quantity_sold ?? r.QuantitySold ?? 0}</td>
+        <td>${money(r.total_sales ?? r.TotalSales)}</td>
+        <td>${money(r.profit ?? r.Profit)}</td></tr>`).join('')
+        : `<tr><td colspan="4" class="empty-state">${tr('empty_list')}</td></tr>`;
 }
 
 function updateShippingButton() {
@@ -1025,31 +1354,6 @@ function populatePosCurrency() {
     if (!sel.value) sel.value = 'USD';
 }
 
-function addToCart(id, qty = 1) {
-    const p = products.find(x => x.id === id); if (!p) return false;
-    if (!isPosProductAvailable(p)) {
-        showOutOfStockPopup(p.name);
-        return false;
-    }
-    const line = cart.find(x => x.id === id);
-    if (line) {
-        if (line.qty + qty > line.max) {
-            showOutOfStockPopup(p.name);
-            return false;
-        }
-        line.qty += qty;
-    } else {
-        const row = makeCartLine(p, qty);
-        if (row.qty > row.max) {
-            showOutOfStockPopup(p.name);
-            return false;
-        }
-        cart.push(row);
-    }
-    renderCart();
-    return true;
-}
-
 function normalizeScanCode(code) {
     return String(code || '')
         .replace(/[\u0000-\u001F\u007F]/g, '') // control chars from some scanners
@@ -1098,6 +1402,19 @@ async function tryPosScanAdd(codeOverride) {
     const input = document.getElementById('pos-search');
     const code = normalizeScanCode(codeOverride != null ? codeOverride : (input?.value || ''));
     if (!code) return;
+
+    // TM-A17 / EAN-13 scale printed labels first
+    try {
+        const handled = await scaleManager.resolveBarcode(code);
+        if (handled) {
+            if (input) input.value = '';
+            renderPOS();
+            scrollPosCartIntoView();
+            input?.focus();
+            return;
+        }
+    } catch { /* fall through to normal scan */ }
+
     const p = findProductByScan(code);
     if (!p) {
         if (input) input.value = '';
@@ -1285,29 +1602,6 @@ function renderSales() {
     document.querySelectorAll('[data-view-order]').forEach(btn => btn.onclick = () => viewOrder(Number(btn.dataset.viewOrder)));
 }
 
-function renderReports() {
-    const s = reportSummary || {};
-    const grid = document.getElementById('report-stats');
-    if (!grid) return;
-    const rangeLabel = (s.fromDate && s.toDate)
-        ? `${toInputDate(s.fromDate)} → ${toInputDate(s.toDate)}`
-        : '';
-    grid.innerHTML = `
-        <div class="stat-card"><div class="label">${tr('rep_sales')}</div><div class="value">${money(s.totalSales)}</div>
-            ${rangeLabel ? `<div class="stat-sub">${escapeHtml(rangeLabel)}</div>` : ''}</div>
-        <div class="stat-card"><div class="label">${tr('rep_cost')}</div><div class="value">${money(s.totalCost)}</div></div>
-        <div class="stat-card"><div class="label">${tr('rep_expenses')}</div><div class="value">${money(s.totalExpenses)}</div></div>
-        <div class="stat-card stat-profit"><div class="label">${tr('rep_profit_before_expenses')}</div><div class="value">${money(s.totalProfit)}</div></div>
-        <div class="stat-card stat-profit-net"><div class="label">${tr('rep_profit_after_expenses')}</div><div class="value">${money(s.totalProfitAfterExpenses)}</div></div>`;
-    const rows = reportTop || [];
-    document.getElementById('report-top-body').innerHTML = rows.length ? rows.map(r => `
-        <tr><td>${escapeHtml(r.product_name || r.ProductName || '')}</td>
-        <td>${r.quantity_sold ?? r.QuantitySold ?? 0}</td>
-        <td>${money(r.total_sales ?? r.TotalSales)}</td>
-        <td>${money(r.profit ?? r.Profit)}</td></tr>`).join('')
-        : `<tr><td colspan="4" class="empty-state">${tr('empty_list')}</td></tr>`;
-}
-
 function historyColLabel(key) {
     const k = String(key || '').trim();
     const map = {
@@ -1325,6 +1619,7 @@ function historyColLabel(key) {
         email: 'col_email', Email: 'col_email', EMAIL: 'col_email',
         amount: 'col_amount', Amount: 'col_amount', AMOUNT: 'col_amount',
         description: 'col_desc', Description: 'col_desc', DESCRIPTION: 'col_desc',
+        payment: 'col_payment', Payment: 'col_payment', PAYMENT: 'col_payment',
     };
     const i18nKey = map[k] || map[k.toLowerCase()];
     return i18nKey ? tr(i18nKey) : k;
@@ -1401,7 +1696,7 @@ async function openQuotationPreview(orderId) {
         const company = document.getElementById('quote-company-name');
         if (company) company.textContent = (data.companyName || 'Otargi').toUpperCase();
         const info = document.getElementById('quote-company-info');
-        if (info) info.textContent = data.companyInfo || 'Jnah- Rihab Road | Beirut - Lebanon | Phone: +961 76 117731';
+        if (info) info.textContent = data.companyInfo || '';
         const meta = document.getElementById('quote-meta-line');
         if (meta) {
             meta.textContent = tr('quote_preview_meta')
@@ -1451,13 +1746,19 @@ function printQuotationPreview() {
     const sheet = document.getElementById('quote-preview-sheet');
     if (!sheet) return;
     document.body.classList.add('printing-quote');
+    runBrowserPrint(() => document.body.classList.remove('printing-quote'));
+}
+
+function runBrowserPrint(onCleanup) {
+    postHost('beginPrint');
     const cleanup = () => {
-        document.body.classList.remove('printing-quote');
+        try { onCleanup?.(); } catch { }
+        postHost('endPrint');
         window.removeEventListener('afterprint', cleanup);
     };
     window.addEventListener('afterprint', cleanup);
     setTimeout(() => { if (!window.matchMedia('print').matches) cleanup(); }, 30000);
-    window.print();
+    setTimeout(() => window.print(), 80);
 }
 
 function exportQuotationPreview() {
@@ -1684,9 +1985,39 @@ function fillPrinterSelect(selId, printers, defaultPrinter) {
     ).join('');
 }
 
-function fillBarcodePrinterSelect(printers, defaultPrinter) {
+let hostPrinterProfiles = {};
+
+function applyProtocolForPrinter(printerSelId, protocolSelId, kind) {
+    const printer = document.getElementById(printerSelId)?.value || '';
+    const protoSel = document.getElementById(protocolSelId);
+    if (!protoSel) return;
+    const profile = hostPrinterProfiles[printer] || {};
+    const saved = kind === 'label'
+        ? (profile.labelProtocol || 'auto')
+        : (profile.receiptProtocol || 'auto');
+    const allowed = kind === 'label' ? ['auto', 'tspl', 'gdi'] : ['auto', 'escpos', 'gdi'];
+    protoSel.value = allowed.includes(saved) ? saved : 'auto';
+}
+
+function fillBarcodePrinterSelect(printers, defaultPrinter, profiles) {
+    if (profiles && typeof profiles === 'object') hostPrinterProfiles = profiles;
     fillPrinterSelect('bpd-printer', printers, defaultPrinter);
     fillPrinterSelect('ppd-printer', printers, defaultPrinter);
+    applyProtocolForPrinter('bpd-printer', 'bpd-protocol', 'label');
+    applyProtocolForPrinter('ppd-printer', 'ppd-protocol', 'receipt');
+}
+
+function wirePrinterProtocolSync() {
+    const bpd = document.getElementById('bpd-printer');
+    const ppd = document.getElementById('ppd-printer');
+    if (bpd && !bpd.dataset.protocolWired) {
+        bpd.dataset.protocolWired = '1';
+        bpd.addEventListener('change', () => applyProtocolForPrinter('bpd-printer', 'bpd-protocol', 'label'));
+    }
+    if (ppd && !ppd.dataset.protocolWired) {
+        ppd.dataset.protocolWired = '1';
+        ppd.addEventListener('change', () => applyProtocolForPrinter('ppd-printer', 'ppd-protocol', 'receipt'));
+    }
 }
 
 function requestHostPrinters() {
@@ -1766,7 +2097,8 @@ function getBarcodePrintOptions() {
     const copies = Math.max(1, Math.min(99, parseInt(document.getElementById('bpd-copies')?.value, 10) || 1));
     const color = (document.getElementById('bpd-color')?.value || 'color') !== 'bw';
     const printerName = document.getElementById('bpd-printer')?.value || '';
-    return { landscape, pageRange, copies, color, printerName };
+    const protocol = document.getElementById('bpd-protocol')?.value || 'auto';
+    return { landscape, pageRange, copies, color, printerName, protocol };
 }
 
 function printBarcodePreview() {
@@ -1792,6 +2124,7 @@ function printBarcodePreview() {
                 action: 'printBarcodes',
                 items,
                 printerName: opts.printerName,
+                protocol: opts.protocol || 'auto',
                 copies: opts.copies,
                 landscape: opts.landscape,
                 color: opts.color,
@@ -1836,20 +2169,27 @@ function printBarcodePreview() {
     });
 
     document.body.classList.add('printing-barcodes');
-    const cleanup = () => {
+    runBrowserPrint(() => {
         document.body.classList.remove('printing-barcodes');
         root.innerHTML = '';
-        window.removeEventListener('afterprint', cleanup);
-    };
-    window.addEventListener('afterprint', cleanup);
-    setTimeout(() => { if (!window.matchMedia('print').matches) cleanup(); }, 60000);
-    setTimeout(() => { window.print(); }, 120);
+    });
+}
+
+function isProtectedSuperAdmin(u) {
+    const name = String(u?.username || '').trim().toLowerCase();
+    return name === 'softio.admin';
 }
 
 function renderUsers() {
-    document.getElementById('users-body').innerHTML = users.length ? users.map(u => `
-        <tr><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.fullName || '—')}</td><td>${escapeHtml(formatRole(u.role))}</td>
-        <td>${u.id != null ? actionBtns(`data-edit-user="${u.id}"`, `data-del-user="${u.id}"`) : '—'}</td></tr>`).join('')
+    document.getElementById('users-body').innerHTML = users.length ? users.map(u => {
+        const protectedAdmin = isProtectedSuperAdmin(u);
+        const actions = u.id == null ? '—'
+            : protectedAdmin
+                ? `<span class="muted" title="${tr('lic_valid')}">Softio</span>`
+                : actionBtns(`data-edit-user="${u.id}"`, `data-del-user="${u.id}"`);
+        return `<tr><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.fullName || '—')}</td><td>${escapeHtml(formatRole(u.role))}</td>
+        <td>${actions}</td></tr>`;
+    }).join('')
         : `<tr><td colspan="4" class="empty-state">${tr('empty_list')}</td></tr>`;
     document.querySelectorAll('[data-edit-user]').forEach(btn => btn.onclick = () => openUserModal(Number(btn.dataset.editUser)));
     document.querySelectorAll('[data-del-user]').forEach(btn => btn.onclick = () => deleteUser(Number(btn.dataset.delUser)));
@@ -2223,19 +2563,235 @@ function calculateProductMargins() {
     });
 }
 
-function onProductTypeChange() {
+function getSellByValue() {
+    return 'piece';
+}
+
+const DEFAULT_PIECE_UOMS = ['pcs', 'box', 'pack', 'meter', 'liter', 'g'];
+let cachedUoms = [...DEFAULT_PIECE_UOMS];
+
+async function loadUoms() {
+    try {
+        const list = await api('/api/uoms');
+        if (Array.isArray(list) && list.length) {
+            cachedUoms = list.map(x => String(x || '').trim()).filter(Boolean);
+        }
+    } catch {
+        // Keep cached/default list if API unavailable
+    }
+    return cachedUoms;
+}
+
+function getPieceUomOptions() {
+    const set = new Set(DEFAULT_PIECE_UOMS.map(u => u.toLowerCase()));
+    const extras = [];
+    for (const u of cachedUoms) {
+        const key = String(u || '').trim();
+        if (!key || key.toLowerCase() === 'kg') continue;
+        if (set.has(key.toLowerCase())) continue;
+        set.add(key.toLowerCase());
+        extras.push(key);
+    }
+    // Also include units already used on loaded products
+    for (const p of (products || [])) {
+        const key = String(p?.uom || '').trim();
+        if (!key || key.toLowerCase() === 'kg') continue;
+        if (set.has(key.toLowerCase())) continue;
+        set.add(key.toLowerCase());
+        extras.push(key);
+    }
+    extras.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    return [...DEFAULT_PIECE_UOMS, ...extras].map(v => ({ value: v, label: v }));
+}
+
+function setProductUomOptions(byWeight, preferred) {
+    const uom = document.getElementById('p-uom');
+    const addBtn = document.getElementById('btn-p-add-uom');
+    if (!uom) return;
+    const prev = preferred != null ? preferred : uom.value;
+    const isService = getProductTypeValue() === 'Service';
+    if (byWeight) {
+        uom.innerHTML = '<option value="kg">kg</option>';
+        uom.value = 'kg';
+        uom.disabled = true;
+        if (addBtn) addBtn.hidden = true;
+    } else {
+        let opts = getPieceUomOptions();
+        const prevKey = String(prev || '').trim();
+        if (prevKey && !opts.some(o => o.value.toLowerCase() === prevKey.toLowerCase())) {
+            opts = [...opts, { value: prevKey, label: prevKey }];
+        }
+        uom.innerHTML = opts.map(o => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
+        uom.disabled = false;
+        if (addBtn) addBtn.hidden = isService;
+        const match = opts.find(o => o.value.toLowerCase() === prevKey.toLowerCase());
+        uom.value = match ? match.value : 'pcs';
+    }
+}
+
+function promptDialog(options = {}) {
+    const {
+        title = tr('add_uom'),
+        message = tr('add_uom_hint'),
+        confirmText = tr('add'),
+        cancelText = tr('cancel'),
+        placeholder = '',
+        initialValue = '',
+    } = options;
+    const overlay = document.getElementById('prompt-modal');
+    const titleEl = document.getElementById('prompt-title');
+    const messageEl = document.getElementById('prompt-message');
+    const inputEl = document.getElementById('prompt-input');
+    const okBtn = document.getElementById('prompt-ok');
+    const cancelBtn = document.getElementById('prompt-cancel');
+    if (!overlay || !titleEl || !messageEl || !inputEl || !okBtn || !cancelBtn) {
+        return Promise.resolve(window.prompt(message, initialValue));
+    }
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    okBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+    inputEl.placeholder = placeholder;
+    inputEl.value = initialValue || '';
+
+    return new Promise(resolve => {
+        const finish = (result) => {
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+            overlay.onclick = null;
+            inputEl.onkeydown = null;
+            document.removeEventListener('keydown', onKey);
+            closeModal('prompt-modal');
+            resolve(result);
+        };
+        const onKey = (e) => {
+            if (e.key === 'Escape') finish(null);
+        };
+        okBtn.onclick = () => finish(inputEl.value.trim());
+        cancelBtn.onclick = () => finish(null);
+        overlay.onclick = (e) => { if (e.target === overlay) finish(null); };
+        inputEl.onkeydown = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); finish(inputEl.value.trim()); }
+        };
+        document.addEventListener('keydown', onKey);
+        openModal('prompt-modal');
+        setTimeout(() => { inputEl.focus(); inputEl.select(); }, 30);
+    });
+}
+
+async function addCustomUom() {
+    if (getSellByValue() === 'weight' || getProductTypeValue() === 'Service') return;
+    const name = await promptDialog({
+        title: tr('add_uom'),
+        message: tr('add_uom_hint'),
+        confirmText: tr('add'),
+        placeholder: 'carton',
+    });
+    if (!name) return;
+    const cleaned = name.trim().replace(/\s+/g, ' ');
+    if (!cleaned) return;
+
+    const existing = getPieceUomOptions().map(o => o.value.toLowerCase());
+    if (existing.includes(cleaned.toLowerCase()) || cleaned.toLowerCase() === 'kg') {
+        toast(tr('uom_exists'), 'error');
+        setProductUomOptions(false, cleaned);
+        return;
+    }
+
+    try {
+        await api('/api/uoms', { method: 'POST', body: JSON.stringify({ name: cleaned }) });
+        if (!cachedUoms.some(u => String(u).toLowerCase() === cleaned.toLowerCase())) {
+            cachedUoms = [...cachedUoms, cleaned];
+        }
+        setProductUomOptions(false, cleaned);
+        updatePieceStockLabels();
+        toast(tr('uom_added'), 'success');
+    } catch (e) {
+        // Still add locally so the user can save the product
+        if (!cachedUoms.some(u => String(u).toLowerCase() === cleaned.toLowerCase())) {
+            cachedUoms = [...cachedUoms, cleaned];
+        }
+        setProductUomOptions(false, cleaned);
+        updatePieceStockLabels();
+        toast(e.message || tr('uom_added'), e.message ? 'error' : 'success');
+    }
+}
+
+function updatePieceStockLabels() {
+    const uomVal = document.getElementById('p-uom')?.value || 'pcs';
+    const stockLabel = document.getElementById('p-stock-label');
+    const minLabel = document.getElementById('p-min-stock-label');
+    const stockHint = document.getElementById('p-stock-hint');
+    if (stockLabel) stockLabel.textContent = `${tr('col_stock')} (${uomVal})`;
+    if (minLabel) minLabel.textContent = `${tr('low_level')} (${uomVal})`;
+    if (stockHint) {
+        stockHint.hidden = false;
+        stockHint.textContent = tr('stock_units_hint');
+    }
+}
+
+function updateSellByWeightUI(preferredUom) {
+    const isService = getProductTypeValue() === 'Service';
+    const byWeight = !isService && getSellByValue() === 'weight';
+    const sellFs = document.getElementById('p-sell-by-fieldset');
+    if (sellFs) sellFs.hidden = isService;
+    const sellHint = document.getElementById('p-sell-by-hint');
+    if (sellHint) {
+        sellHint.hidden = byWeight || isService;
+        sellHint.textContent = tr('sell_by_hint_piece');
+    }
+    const guide = document.getElementById('p-weight-guide');
+    if (guide) guide.hidden = !byWeight;
+    const priceHint = document.getElementById('p-price-hint');
+    if (priceHint) priceHint.hidden = !byWeight;
+    const priceCol = document.getElementById('p-price-col-label');
+    if (priceCol) priceCol.textContent = byWeight ? tr('price_per_kg') : tr('col_price');
+    const pricesLegend = document.getElementById('p-prices-legend');
+    if (pricesLegend) pricesLegend.textContent = byWeight ? tr('price_per_kg') : tr('prices');
+
+    const uomHint = document.getElementById('p-uom-hint');
+    setProductUomOptions(byWeight, preferredUom);
+    if (uomHint) {
+        uomHint.hidden = isService;
+        uomHint.textContent = byWeight ? tr('uom_weight_hint') : tr('uom_piece_hint');
+    }
+
+    const stockLabel = document.getElementById('p-stock-label');
+    const minLabel = document.getElementById('p-min-stock-label');
+    const stockHint = document.getElementById('p-stock-hint');
+    if (byWeight) {
+        if (stockLabel) stockLabel.textContent = tr('stock_grams');
+        if (minLabel) minLabel.textContent = tr('low_level_grams');
+        if (stockHint) {
+            stockHint.hidden = false;
+            stockHint.textContent = tr('stock_grams_hint');
+        }
+    } else if (!isService) {
+        updatePieceStockLabels();
+    } else {
+        if (stockLabel) stockLabel.textContent = tr('col_stock');
+        if (minLabel) minLabel.textContent = tr('low_level');
+        if (stockHint) stockHint.hidden = true;
+    }
+}
+
+function onProductTypeChange(preferredUom) {
     const isService = getProductTypeValue() === 'Service';
     const track = document.getElementById('p-track-stock');
     const stock = document.getElementById('p-stock');
     const minStock = document.getElementById('p-min-stock');
     if (isService) {
         if (track) { track.checked = false; track.disabled = true; }
+        const piece = document.querySelector('input[name="p-sell-by"][value="piece"]');
+        if (piece) piece.checked = true;
     } else {
         if (track) track.disabled = false;
     }
     const tracked = track?.checked && !isService;
     if (stock) stock.disabled = !tracked;
     if (minStock) minStock.disabled = !tracked;
+    updateSellByWeightUI(preferredUom);
 }
 
 function generateAutoSku() {
@@ -2291,6 +2847,7 @@ function buildProductPayload() {
         isInactive: document.getElementById('p-inactive')?.checked ?? false,
         taxRate: Number(document.getElementById('p-tax')?.value) || 0,
         isStockTracked: tracked,
+        sellByWeight: false,
         price2: Number(document.getElementById('p-price2')?.value) || 0,
         price3: Number(document.getElementById('p-price3')?.value) || 0,
         price4: Number(document.getElementById('p-price4')?.value) || 0,
@@ -2314,7 +2871,6 @@ function fillProductForm(p) {
     document.getElementById('p-sku').value = p.sku || '';
     document.getElementById('p-location').value = p.location || '';
     document.getElementById('p-shelf').value = p.shelf || '';
-    document.getElementById('p-uom').value = p.uom || '';
     document.getElementById('p-batch').value = p.batch || '';
     document.getElementById('p-expiry').value = p.expiry ? p.expiry.substring(0, 10) : '';
     document.getElementById('p-sales').checked = p.isSalesItem !== false;
@@ -2322,12 +2878,15 @@ function fillProductForm(p) {
     document.getElementById('p-inactive').checked = !!p.isInactive;
     document.getElementById('p-tax').value = String(p.taxRate ?? 0);
     document.getElementById('p-track-stock').checked = p.isStockTracked !== false && !isService;
+    const sellBy = isSellByWeight(p) ? 'weight' : 'piece';
+    const sellRadio = document.querySelector(`input[name="p-sell-by"][value="${sellBy}"]`);
+    if (sellRadio) sellRadio.checked = true;
     const typeRadio = document.querySelector(`input[name="p-type"][value="${isService ? 'Service' : 'Product'}"]`);
     if (typeRadio) typeRadio.checked = true;
     fillSupplierSelect(document.getElementById('p-supplier'));
     document.getElementById('p-supplier').value = p.supplierId ? String(p.supplierId) : '';
     setProductImagePreview(p.image || '');
-    onProductTypeChange();
+    onProductTypeChange(p.uom || '');
     calculateProductMargins();
 }
 
@@ -2339,6 +2898,8 @@ function resetProductForm() {
     document.getElementById('p-inactive').checked = false;
     document.getElementById('p-track-stock').checked = true;
     document.querySelector('input[name="p-type"][value="Product"]').checked = true;
+    const sellPiece = document.querySelector('input[name="p-sell-by"][value="piece"]');
+    if (sellPiece) sellPiece.checked = true;
     fillCategorySelect(document.getElementById('p-category'));
     fillSupplierSelect(document.getElementById('p-supplier'));
     setProductImagePreview('');
@@ -2522,7 +3083,14 @@ async function placeOrder(status, opts = {}) {
     if (delta < -0.004) discountAmount = +(discountAmount - delta).toFixed(2);
     else if (delta > 0.004) shippingAmount = +(shippingAmount + delta).toFixed(2);
     const payload = {
-        items: cart.map(x => ({ id: x.id, name: x.name, price: x.price, qty: x.qty })),
+        items: cart.map(x => ({
+            id: x.id,
+            name: x.name,
+            price: x.price,
+            qty: x.qty,
+            stockQty: x.stockQty > 0 ? x.stockQty : 0,
+            weightKg: x.weightKg || 0
+        })),
         status,
         vatAmount,
         shippingAmount,
@@ -2607,7 +3175,8 @@ function getPosPrintOptions() {
     const copies = Math.max(1, Math.min(99, parseInt(document.getElementById('ppd-copies')?.value, 10) || 1));
     const color = (document.getElementById('ppd-color')?.value || 'color') !== 'bw';
     const printerName = document.getElementById('ppd-printer')?.value || '';
-    return { landscape, pageRange, copies, color, printerName };
+    const protocol = document.getElementById('ppd-protocol')?.value || 'auto';
+    return { landscape, pageRange, copies, color, printerName, protocol };
 }
 
 function applyPosPrintLayoutPreview() {
@@ -2664,6 +3233,7 @@ function doPrintPosReceipt() {
         discount: t.disc,
         total: t.total,
         printerName: opts.printerName,
+        protocol: opts.protocol || 'auto',
         copies: opts.copies,
         landscape: opts.landscape,
         color: opts.color
@@ -2689,15 +3259,11 @@ function doPrintPosReceipt() {
         document.body.appendChild(box);
     }
     box.innerHTML = buildPosReceiptHtml();
-    const cleanup = () => {
+    closeModal('pos-print-modal');
+    runBrowserPrint(() => {
         const el = document.getElementById('pos-print-receipt');
         if (el) { el.innerHTML = ''; el.remove(); }
-        window.removeEventListener('afterprint', cleanup);
-    };
-    window.addEventListener('afterprint', cleanup);
-    setTimeout(() => { if (!window.matchMedia('print').matches) cleanup(); }, 30000);
-    closeModal('pos-print-modal');
-    setTimeout(() => window.print(), 80);
+    });
 }
 
 function todayInputValue() {
@@ -2964,6 +3530,11 @@ function openUserModal(id) {
 }
 
 async function deleteUser(id) {
+    const u = users.find(x => x.id === id);
+    if (u && isProtectedSuperAdmin(u)) {
+        toast(tr('cannot_delete_super_admin'), 'error');
+        return;
+    }
     if (!await confirmDialog(tr('confirm_delete'))) return;
     try {
         await api('/api/users/' + id + '/delete', { method: 'POST' });
@@ -3091,6 +3662,98 @@ async function importInventoryCsv(file) {
     await loadData();
 }
 
+async function importSalesCsv(file) {
+    const { rows } = await parseCsvFile(file);
+    if (!rows.length) return toast(tr('empty_list'), 'error');
+    const payload = rows.map(row => ({
+        customer: csvCell(row, 'customer', 'customer_name'),
+        total: parseFloat(csvCell(row, 'total', 'amount', 'total_amount') || '0') || 0,
+        date: csvCell(row, 'date', 'order_date'),
+        payment: csvCell(row, 'payment', 'paymentstatus', 'payment_status', 'status') || 'Paid'
+    })).filter(r => r.total > 0);
+    if (!payload.length) return toast(tr('empty_list'), 'error');
+    try {
+        const res = await api('/api/sales/import', { method: 'POST', body: JSON.stringify(payload) });
+        toast(tr('import_ok') + ' (' + (res.imported || 0) + ')', 'success');
+        await loadData();
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function importHistoryCsv(file) {
+    const { rows } = await parseCsvFile(file);
+    if (!rows.length) return toast(tr('empty_list'), 'error');
+    const payload = rows.map(row => ({
+        date: csvCell(row, 'date'),
+        action: csvCell(row, 'action', 'type'),
+        item: csvCell(row, 'item', 'name', 'sku'),
+        customer: csvCell(row, 'customer'),
+        details: csvCell(row, 'details', 'description', 'desc'),
+        description: csvCell(row, 'description', 'details', 'desc'),
+        user: csvCell(row, 'user', 'username'),
+        status: csvCell(row, 'status'),
+        payment: csvCell(row, 'payment', 'paymentstatus', 'payment_status'),
+        total: parseFloat(csvCell(row, 'total', 'amount') || '0') || 0
+    }));
+    try {
+        const res = await api('/api/history/import', { method: 'POST', body: JSON.stringify(payload) });
+        toast(tr('import_ok') + ' (' + (res.imported || 0) + ')', 'success');
+        await loadData();
+        await loadHistory();
+        renderHistory();
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function importReportsCsv(file) {
+    const { rows } = await parseCsvFile(file);
+    if (!rows.length) return toast(tr('empty_list'), 'error');
+    const payload = rows.map(row => ({
+        name: csvCell(row, 'name', 'product', 'product_name'),
+        qty: parseFloat(csvCell(row, 'qty', 'quantity') || '0') || 0,
+        sales: parseFloat(csvCell(row, 'sales', 'total_sales') || '0') || 0,
+        profit: parseFloat(csvCell(row, 'profit') || '0') || 0,
+        total: parseFloat(csvCell(row, 'total', 'amount') || '0') || 0,
+        date: csvCell(row, 'date'),
+        metric: csvCell(row, 'metric'),
+        value: csvCell(row, 'value')
+    }));
+    try {
+        const res = await api('/api/reports/import', { method: 'POST', body: JSON.stringify(payload) });
+        toast(tr('import_ok') + ' (' + (res.imported || 0) + ')', 'success');
+        await loadData();
+        await loadReports();
+        renderReports();
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function importExpensesCsv(file) {
+    const { rows } = await parseCsvFile(file);
+    if (!rows.length) return toast(tr('empty_list'), 'error');
+    let ok = 0;
+    for (const row of rows) {
+        const category = csvCell(row, 'category') || '';
+        const amount = parseFloat(csvCell(row, 'amount') || '0') || 0;
+        if (!category || !(amount > 0)) continue;
+        let expenseDate = csvCell(row, 'date', 'expensedate', 'expense_date') || '';
+        if (expenseDate && expenseDate.includes('T')) expenseDate = expenseDate.slice(0, 10);
+        if (!expenseDate) expenseDate = new Date().toISOString().slice(0, 10);
+        try {
+            await api('/api/expenses', {
+                method: 'POST',
+                body: JSON.stringify({
+                    category,
+                    amount,
+                    expenseDate,
+                    description: csvCell(row, 'description', 'desc') || '',
+                    recordedBy: currentUser?.username || 'Web'
+                })
+            });
+            ok++;
+        } catch (e) { console.error(e); }
+    }
+    toast(ok ? (tr('import_ok') || tr('saved_ok')) + ' (' + ok + ')' : tr('empty_list'), ok ? 'success' : 'error');
+    await loadData();
+}
+
 function setupNavigation() {
     document.querySelectorAll('.nav-menu .nav-item[data-target]').forEach(item => {
         item.addEventListener('click', async e => {
@@ -3145,6 +3808,7 @@ function setupAuth() {
                 })
             });
             currentUser = user;
+            sessionStorage.setItem('generic_user', JSON.stringify(user));
             sessionStorage.setItem('otargi_user', JSON.stringify(user));
             document.getElementById('login-pass').value = '';
             document.getElementById('login-user').value = '';
@@ -3171,7 +3835,7 @@ function setupActions() {
     const btnLang = document.getElementById('btn-lang');
     if (btnLang) btnLang.onclick = () => {
         lang = lang === 'en' ? 'ar' : 'en';
-        localStorage.setItem('otargi_lang', lang); applyI18n(); renderAll();
+        localStorage.setItem('generic_lang', lang); applyI18n(); renderAll();
     };
 
     document.getElementById('btn-copy-connect-url')?.addEventListener('click', async () => {
@@ -3240,6 +3904,11 @@ function setupActions() {
         }
     }));
     document.getElementById('p-track-stock')?.addEventListener('change', onProductTypeChange);
+    document.querySelectorAll('input[name="p-sell-by"]').forEach(r => r.addEventListener('change', () => updateSellByWeightUI()));
+    document.getElementById('btn-p-add-uom')?.addEventListener('click', () => { addCustomUom(); });
+    document.getElementById('p-uom')?.addEventListener('change', () => {
+        if (getSellByValue() !== 'weight') updatePieceStockLabels();
+    });
     ['p-cost', 'p-price', 'p-price2', 'p-price3', 'p-price4'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', calculateProductMargins);
     });
@@ -3361,6 +4030,30 @@ function setupActions() {
     document.getElementById('supp-import-file')?.addEventListener('change', async e => {
         const file = e.target.files?.[0];
         if (file) await importSuppliersCsv(file);
+        e.target.value = '';
+    });
+    document.getElementById('btn-import-sales')?.addEventListener('click', () => document.getElementById('sales-import-file')?.click());
+    document.getElementById('sales-import-file')?.addEventListener('change', async e => {
+        const file = e.target.files?.[0];
+        if (file) await importSalesCsv(file);
+        e.target.value = '';
+    });
+    document.getElementById('btn-import-history')?.addEventListener('click', () => document.getElementById('history-import-file')?.click());
+    document.getElementById('history-import-file')?.addEventListener('change', async e => {
+        const file = e.target.files?.[0];
+        if (file) await importHistoryCsv(file);
+        e.target.value = '';
+    });
+    document.getElementById('btn-import-reports')?.addEventListener('click', () => document.getElementById('reports-import-file')?.click());
+    document.getElementById('reports-import-file')?.addEventListener('change', async e => {
+        const file = e.target.files?.[0];
+        if (file) await importReportsCsv(file);
+        e.target.value = '';
+    });
+    document.getElementById('btn-import-expenses')?.addEventListener('click', () => document.getElementById('exp-import-file')?.click());
+    document.getElementById('exp-import-file')?.addEventListener('change', async e => {
+        const file = e.target.files?.[0];
+        if (file) await importExpensesCsv(file);
         e.target.value = '';
     });
 
@@ -3794,13 +4487,23 @@ function setupChrome() {
     document.getElementById('win-min')?.addEventListener('click', () => postHost('minimize'));
     document.getElementById('win-max')?.addEventListener('click', () => postHost('maximize'));
     document.getElementById('win-close')?.addEventListener('click', () => postHost('close'));
-    const drag = document.getElementById('titlebar-drag');
-    if (drag) {
-        drag.addEventListener('mousedown', e => {
-            if (e.button !== 0) return;
-            postHost('drag');
+    // Drag from the title bar (empty areas + drag region). Must post while
+    // the left button is still down so the host can start the native move loop.
+    const titlebar = document.getElementById('titlebar');
+    const startDrag = (e) => {
+        if (!isHosted) return;
+        if (typeof e.button === 'number' && e.button !== 0) return;
+        if (e.target.closest('button, a, input, select, textarea, label, .tb-btn, .tb-user, .win-btn, .window-controls')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        postHost('drag');
+    };
+    if (titlebar) {
+        titlebar.addEventListener('pointerdown', startDrag, true);
+        titlebar.addEventListener('dblclick', e => {
+            if (e.target.closest('button, a, input, select, textarea, label, .tb-btn, .tb-user, .win-btn, .window-controls')) return;
+            postHost('maximize');
         });
-        drag.addEventListener('dblclick', () => postHost('maximize'));
     }
     try {
         if (window.chrome?.webview) {
@@ -3814,7 +4517,8 @@ function setupChrome() {
                     if (icon) icon.textContent = data.maximized ? 'filter_none' : 'crop_square';
                 }
                 if (data?.type === 'printers') {
-                    fillBarcodePrinterSelect(data.printers || [], data.defaultPrinter || '');
+                    fillBarcodePrinterSelect(data.printers || [], data.defaultPrinter || '', data.profiles || {});
+                    wirePrinterProtocolSync();
                 }
                 if (data?.type === 'printResult') {
                     if (data.ok) toast(tr('print_sent'));
@@ -3853,7 +4557,7 @@ function calcPress(key) {
     updateCalcDisplay();
 }
 
-const NOTIF_DISMISS_KEY = 'otargi_dismissed_notifs';
+const NOTIF_DISMISS_KEY = 'generic_dismissed_notifs';
 
 function notifKey(n) {
     return `${n.type || ''}|${n.title || ''}|${n.message || ''}`;
@@ -4028,12 +4732,56 @@ function setupTools() {
     document.querySelectorAll('[data-calc]').forEach(btn => {
         btn.addEventListener('click', () => calcPress(btn.getAttribute('data-calc')));
     });
-    document.getElementById('btn-do-backup')?.addEventListener('click', async () => {
+    document.getElementById('btn-backup-export')?.addEventListener('click', async () => {
         try {
-            await api('/api/backup/create', { method: 'POST', body: '{}' });
-            toast(tr('backup_ok'), 'success');
+            const res = await fetch(API + '/api/backup/export');
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+            const blob = await res.blob();
+            const cd = res.headers.get('Content-Disposition') || '';
+            const m = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i.exec(cd);
+            const name = m ? m[1].replace(/['"]/g, '') : `backup_${Date.now()}.db`;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            toast(tr('backup_export_ok'), 'success');
             openBackupModal();
-        } catch (e) { toast(e.message, 'error'); }
+        } catch (e) { toast(e.message || tr('backup_fail'), 'error'); }
+    });
+    document.getElementById('btn-backup-import')?.addEventListener('click', () => {
+        document.getElementById('backup-import-file')?.click();
+    });
+    document.getElementById('backup-import-file')?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!await confirmDialog(tr('confirm_restore'), { danger: true, confirmText: tr('import') })) return;
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch(API + '/api/backup/import', { method: 'POST', body: fd });
+            if (!res.ok) {
+                let err = res.statusText;
+                try { const j = await res.json(); err = j.error || j.title || err; } catch {}
+                throw new Error(err);
+            }
+            toast(tr('backup_import_ok'), 'success');
+            closeModal('backup-modal');
+            await loadData();
+        } catch (err) { toast(err.message, 'error'); }
+    });
+    document.getElementById('btn-backup-factory')?.addEventListener('click', async () => {
+        if (!await confirmDialog(tr('confirm_factory_1'), { danger: true, confirmText: tr('factory_reset') })) return;
+        if (!await confirmDialog(tr('confirm_factory_2'), { danger: true, confirmText: tr('factory_reset') })) return;
+        try {
+            await api('/api/backup/factory-reset', { method: 'POST', body: '{}' });
+            resetClientState();
+            toast(tr('factory_ok'), 'success');
+            closeModal('backup-modal');
+            await loadData();
+            renderAll();
+        } catch (e) { toast(e.message || tr('factory_fail'), 'error'); }
     });
     document.getElementById('btn-open-backup')?.addEventListener('click', async () => {
         try { await api('/api/backup/open-folder', { method: 'POST', body: '{}' }); }
@@ -4047,8 +4795,499 @@ function setupSignalR() {
     connection.on('InventoryChanged', () => loadData());
     connection.on('SaleCompleted', () => loadData());
     connection.on('StockUpdated', () => loadData());
+    connection.on('ScaleWeight', () => { /* scale branch only */ });
+    connection.on('ScaleStatus', () => { /* scale branch only */ });
     connection.start().catch(() => setTimeout(setupSignalR, 5000));
 }
+
+const scaleManager = {
+    pending: null, // { weightKg, linePrice, productId } after Read / manual entry
+    manualMode: false,
+
+    async init() {
+        document.getElementById('btnScaleSettings')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const settings = document.getElementById('scaleSettings');
+            const panel = document.getElementById('scalePanel');
+            if (!settings) return;
+            const opening = settings.classList.contains('hidden');
+            settings.classList.toggle('hidden', !opening);
+            if (panel) panel.classList.toggle('settings-open', opening);
+        });
+        document.getElementById('btnScaleConnect')?.addEventListener('click', () => this.connect());
+        document.getElementById('btnScaleDisconnect')?.addEventListener('click', () => this.disconnect());
+        document.getElementById('btnScaleTare')?.addEventListener('click', () => this.tare());
+        document.getElementById('btnScaleZero')?.addEventListener('click', () => this.zero());
+        document.getElementById('btnScaleRequest')?.addEventListener('click', () => this.requestWeight());
+        document.getElementById('btnScaleSimulate')?.addEventListener('click', () => this.simulate(0.525));
+        document.getElementById('btnScaleAddWeighed')?.addEventListener('click', () => this.addWeighedProduct());
+        document.getElementById('btnScaleClearProduct')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.clearSelectedProduct();
+        });
+        const manual = document.getElementById('scaleManualWeight');
+        if (manual) {
+            manual.addEventListener('input', () => this.onManualWeightInput());
+            manual.addEventListener('change', () => this.onManualWeightInput());
+        }
+        await this.refreshPorts();
+        await this.refreshStatus();
+        this.renderSelected();
+        this.updateManualHint();
+        setInterval(() => this.refreshStatus(true), 4000);
+    },
+
+    getSelectedProduct() {
+        if (!lastTappedProductId) return null;
+        const p = products.find(x => x.id === lastTappedProductId);
+        return p && isSellByWeight(p) ? p : null;
+    },
+
+    clearSelectedProduct() {
+        lastTappedProductId = null;
+        this.pending = null;
+        this.manualMode = false;
+        this.setManualWeight(0);
+        const nameEl = document.getElementById('scaleSelectedName');
+        const rateEl = document.getElementById('scaleSelectedRate');
+        if (nameEl) nameEl.textContent = '';
+        if (rateEl) rateEl.textContent = '';
+        this.renderSelected();
+        this.renderCalc(0, false);
+        this.updateManualHint();
+        // Refresh cards so weigh highlight is cleared (don't re-select)
+        const grid = document.getElementById('pos-products');
+        if (grid) {
+            grid.querySelectorAll('.pos-product-card.is-scale-selected').forEach(el => {
+                el.classList.remove('is-scale-selected');
+            });
+        }
+    },
+
+    selectForWeighing(p) {
+        lastTappedProductId = p?.id ?? null;
+        this.pending = null;
+        this.manualMode = true;
+        // No hardware scale on Generic main — prompt for kg
+        const raw = window.prompt(tr('scale_weight_lbl') + ' (kg)', '0.100');
+        const weightKg = Math.max(0, Number(raw) || 0);
+        this.setManualWeight(weightKg);
+        this.renderSelected();
+        if (weightKg > 0 && p) {
+            this.pending = {
+                productId: p.id,
+                weightKg,
+                linePrice: this.calcLinePrice(p, weightKg),
+                source: 'manual'
+            };
+            this.renderCalc(weightKg, true);
+            this.addWeighedProduct();
+        } else {
+            this.renderCalc(0, false);
+            toast(tr('weigh_need_scale'), 'info');
+        }
+        this.updateManualHint();
+    },
+
+    setSelectedProduct(p) {
+        this.selectForWeighing(p);
+    },
+
+    setManualWeight(kg) {
+        const el = document.getElementById('scaleManualWeight');
+        if (el) el.value = Number(kg || 0).toFixed(3);
+    },
+
+    getManualWeight() {
+        const el = document.getElementById('scaleManualWeight');
+        const v = Number(el?.value);
+        return Number.isFinite(v) ? Math.max(0, v) : 0;
+    },
+
+    onManualWeightInput() {
+        this.manualMode = true;
+        const product = this.getSelectedProduct();
+        const weightKg = this.getManualWeight();
+        if (!product) {
+            this.pending = null;
+            this.renderCalc(weightKg, false);
+            return;
+        }
+        if (weightKg <= 0) {
+            this.pending = null;
+            this.renderCalc(0, false);
+            return;
+        }
+        this.pending = {
+            productId: product.id,
+            weightKg,
+            linePrice: this.calcLinePrice(product, weightKg),
+            source: 'manual'
+        };
+        this.renderCalc(weightKg, true);
+    },
+
+    commitPendingFromWeight(weightKg, source = 'scale') {
+        const product = this.getSelectedProduct();
+        if (!product || weightKg <= 0) {
+            this.pending = null;
+            return false;
+        }
+        this.pending = {
+            productId: product.id,
+            weightKg,
+            linePrice: this.calcLinePrice(product, weightKg),
+            source
+        };
+        return true;
+    },
+
+    weightKgNow() {
+        if (this.manualMode) return this.getManualWeight();
+        let weight = Number(scaleState.weight || 0);
+        const unit = (scaleState.unit || 'kg').toLowerCase();
+        if (unit === 'g') weight = weight / 1000;
+        return weight;
+    },
+
+    calcLinePrice(product, weightKg) {
+        const unitPrice = Number(product?.price) || 0;
+        return Math.round(unitPrice * weightKg * 100) / 100;
+    },
+
+    updateManualHint() {
+        const hint = document.getElementById('scaleManualHint');
+        if (!hint) return;
+        hint.textContent = scaleState.connected ? tr('scale_manual_hint') : tr('scale_offline_manual');
+    },
+
+    async refreshPorts() {
+        try {
+            const ports = await api('/api/scale/ports');
+            const sel = document.getElementById('scalePortSelect');
+            if (!sel) return;
+            const current = sel.value || scaleState.port;
+            sel.innerHTML = '';
+            (ports || []).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                sel.appendChild(opt);
+            });
+            if (current) sel.value = current;
+        } catch { }
+    },
+
+    async refreshStatus(silent = false) {
+        try {
+            const data = await api('/api/scale/status');
+            this.applyState(data);
+            const baud = document.getElementById('scaleBaudSelect');
+            const auto = document.getElementById('scaleAutoConnect');
+            const port = document.getElementById('scalePortSelect');
+            if (baud && data.baudRate) baud.value = String(data.baudRate);
+            if (auto) auto.checked = !!data.autoConnect;
+            if (port && data.port) {
+                if (![...port.options].some(o => o.value === data.port)) {
+                    const opt = document.createElement('option');
+                    opt.value = data.port;
+                    opt.textContent = data.port;
+                    port.appendChild(opt);
+                }
+                port.value = data.port;
+            }
+        } catch {
+            if (!silent) this.applyState({ connected: false, weight: 0, unit: 'kg', stable: true });
+        }
+    },
+
+    applyState(data) {
+        if (!data) return;
+        scaleState = {
+            connected: !!data.connected,
+            weight: Number(data.weight || 0),
+            unit: data.unit || 'kg',
+            stable: data.stable !== false,
+            port: data.port || scaleState.port || ''
+        };
+        this.updateManualHint();
+        // Live scale updates fill the input unless cashier is typing manually
+        if (!this.manualMode && scaleState.connected) {
+            let w = Number(scaleState.weight || 0);
+            if ((scaleState.unit || 'kg').toLowerCase() === 'g') w = w / 1000;
+            this.setManualWeight(w);
+            const product = this.getSelectedProduct();
+            if (product && w > 0) this.commitPendingFromWeight(w, 'scale');
+        }
+        this.render();
+    },
+
+    onWeight(payload) { this.applyState({ ...scaleState, ...payload }); },
+    onStatus(payload) { this.applyState({ ...scaleState, ...payload }); },
+
+    renderSelected() {
+        const empty = document.getElementById('scaleSelectedEmpty');
+        const info = document.getElementById('scaleSelectedInfo');
+        const nameEl = document.getElementById('scaleSelectedName');
+        const rateEl = document.getElementById('scaleSelectedRate');
+        const panel = document.getElementById('scalePanel');
+        const p = this.getSelectedProduct();
+        if (!p) {
+            if (panel) panel.classList.add('is-collapsed');
+            if (empty) {
+                empty.hidden = false;
+                empty.style.display = '';
+            }
+            if (info) {
+                info.hidden = true;
+                info.style.display = 'none';
+            }
+            if (nameEl) nameEl.textContent = '';
+            if (rateEl) rateEl.textContent = '';
+            return;
+        }
+        if (panel) panel.classList.remove('is-collapsed');
+        if (empty) {
+            empty.hidden = true;
+            empty.style.display = 'none';
+        }
+        if (info) {
+            info.hidden = false;
+            info.style.display = 'flex';
+        }
+        if (nameEl) nameEl.textContent = p.name;
+        if (rateEl) rateEl.textContent = `${tr('scale_selected')}: ${formatPosPrice(p)}`;
+    },
+
+    renderCalc(weightKg, locked = false) {
+        const calcEl = document.getElementById('scaleCalcPrice');
+        const p = this.getSelectedProduct();
+        if (!calcEl) return;
+        if (!p) {
+            calcEl.textContent = money(0);
+            calcEl.classList.remove('is-ready');
+            return;
+        }
+        const w = weightKg != null ? weightKg : (this.pending?.weightKg ?? this.getManualWeight());
+        const price = this.calcLinePrice(p, Math.max(0, w));
+        calcEl.textContent = money(price);
+        calcEl.classList.toggle('is-ready', locked || (this.pending && this.pending.productId === p.id && w > 0));
+    },
+
+    render() {
+        const dot = document.getElementById('scaleDot');
+        const text = document.getElementById('scaleStatusText');
+        if (dot) {
+            dot.classList.toggle('on', scaleState.connected && scaleState.stable);
+            dot.classList.toggle('unstable', scaleState.connected && !scaleState.stable);
+        }
+        if (text) {
+            if (scaleState.connected) {
+                if (scaleState.stable) {
+                    text.textContent = scaleState.port
+                        ? `${tr('scale_online')} · ${scaleState.port}`
+                        : tr('scale_online');
+                } else {
+                    text.textContent = tr('scale_unstable');
+                }
+            } else {
+                text.textContent = tr('scale_offline');
+            }
+        }
+        const displayW = this.pending ? this.pending.weightKg : this.getManualWeight();
+        this.renderSelected();
+        this.renderCalc(displayW, !!this.pending);
+        this.updateManualHint();
+    },
+
+    async connect() {
+        const port = document.getElementById('scalePortSelect')?.value || '';
+        const baudRate = Number(document.getElementById('scaleBaudSelect')?.value || 9600);
+        const autoConnect = !!document.getElementById('scaleAutoConnect')?.checked;
+        try {
+            await api('/api/scale/config', {
+                method: 'POST',
+                body: JSON.stringify({ portName: port, baudRate, autoConnect, defaultUnit: 'kg' })
+            });
+            await api('/api/scale/connect', {
+                method: 'POST',
+                body: JSON.stringify({ port, baudRate })
+            });
+            toast(tr('scale_connected'), 'success');
+            await this.refreshStatus();
+        } catch (e) {
+            toast(e.message || tr('scale_connect_failed'), 'error');
+        }
+    },
+
+    async disconnect() {
+        try {
+            await api('/api/scale/disconnect', { method: 'POST', body: '{}' });
+            toast(tr('scale_disconnected'), 'success');
+            await this.refreshStatus();
+        } catch (e) { toast(e.message || tr('scale_api_unavailable'), 'error'); }
+    },
+
+    async tare() {
+        try {
+            await api('/api/scale/tare', { method: 'POST', body: '{}' });
+            this.pending = null;
+            await this.refreshStatus();
+        } catch (e) { toast(e.message || tr('scale_api_unavailable'), 'error'); }
+    },
+
+    async zero() {
+        try {
+            await api('/api/scale/zero', { method: 'POST', body: '{}' });
+            this.pending = null;
+            await this.refreshStatus();
+        } catch (e) { toast(e.message || tr('scale_api_unavailable'), 'error'); }
+    },
+
+    async requestWeight() {
+        const product = this.getSelectedProduct();
+        if (!product) {
+            toast(tr('weigh_need_product'), 'error');
+            return;
+        }
+        try {
+            this.manualMode = false;
+            const data = await api('/api/scale/request', { method: 'POST', body: '{}' });
+            this.applyState({ ...scaleState, ...data, connected: scaleState.connected || !!data.success });
+            let weightKg = Number(scaleState.weight || 0);
+            if ((scaleState.unit || 'kg').toLowerCase() === 'g') weightKg = weightKg / 1000;
+            this.setManualWeight(weightKg);
+            if (weightKg <= 0) {
+                this.pending = null;
+                toast(tr('weigh_need_scale'), 'error');
+                this.render();
+                return;
+            }
+            this.commitPendingFromWeight(weightKg, 'scale');
+            this.render();
+            toast(tr('scale_weighed_toast')
+                .replace('{0}', product.name)
+                .replace('{1}', weightKg.toFixed(3))
+                .replace('{2}', tr('unit_kg'))
+                .replace('{3}', money(this.pending.linePrice)), 'success');
+        } catch (e) {
+            // Scale failed — fall back to whatever is typed in the manual field
+            this.manualMode = true;
+            const w = this.getManualWeight();
+            if (w > 0) {
+                this.commitPendingFromWeight(w, 'manual');
+                this.render();
+                toast(tr('scale_weighed_toast')
+                    .replace('{0}', product.name)
+                    .replace('{1}', w.toFixed(3))
+                    .replace('{2}', tr('unit_kg'))
+                    .replace('{3}', money(this.pending.linePrice)), 'success');
+            } else {
+                toast(tr('scale_offline_manual'), 'info');
+                document.getElementById('scaleManualWeight')?.focus();
+            }
+        }
+    },
+
+    async simulate(weight = 0.525) {
+        try {
+            await api('/api/scale/simulate', {
+                method: 'POST',
+                body: JSON.stringify({ weight, unit: 'kg', stable: true })
+            });
+            toast(tr('scale_simulated').replace('{0}', String(weight)).replace('{1}', tr('unit_kg')), 'success');
+            this.manualMode = false;
+            await this.refreshStatus();
+            const product = this.getSelectedProduct();
+            this.setManualWeight(weight);
+            if (product) {
+                this.commitPendingFromWeight(weight, 'scale');
+                this.render();
+            }
+        } catch (e) {
+            // No scale API — still allow Sim as manual fill
+            this.manualMode = true;
+            this.setManualWeight(weight);
+            this.onManualWeightInput();
+            toast(tr('scale_manual_set').replace('{0}', String(weight)).replace('{1}', tr('unit_kg')), 'success');
+        }
+    },
+
+    addWeighedProduct() {
+        const product = this.getSelectedProduct();
+        if (!product) {
+            toast(tr('weigh_need_product'), 'error');
+            return;
+        }
+        // Prefer pending; otherwise use typed manual weight
+        let weight = this.pending?.productId === product.id ? this.pending.weightKg : this.getManualWeight();
+        if (!(weight > 0)) {
+            toast(tr('weigh_need_read'), 'error');
+            document.getElementById('scaleManualWeight')?.focus();
+            return;
+        }
+        const linePrice = this.calcLinePrice(product, weight);
+        const stockQty = Math.max(1, Math.round(weight * 1000));
+        const ok = addToCart(product.id, 1, {
+            name: `${product.name} (${weight.toFixed(3)} ${tr('unit_kg')})`,
+            price: linePrice,
+            lineKey: `${product.id}-w-${Date.now()}`,
+            weighted: true,
+            weightKg: weight,
+            stockQty
+        });
+        if (ok === false) return;
+        toast(tr('weigh_added').replace('{0}', product.name).replace('{1}', weight.toFixed(3)), 'success');
+        this.pending = null;
+        this.setManualWeight(0);
+        this.render();
+        renderCart();
+    },
+
+    async resolveBarcode(code) {
+        try {
+            const res = await fetch('/api/scale/resolve-barcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcode: code })
+            });
+            if (res.status === 404) {
+                const err = await res.json().catch(() => ({}));
+                if (err.isScaleBarcode) {
+                    toast(err.error || 'Scale PLU not found', 'error');
+                    return true;
+                }
+                return false;
+            }
+            if (!res.ok) return false;
+            const data = await res.json();
+            if (!data.isScaleBarcode) return false;
+            const p = data.product;
+            const line = data.line;
+            if (!products.some(x => x.id === p.id)) {
+                products.push({
+                    id: p.id, name: p.name, price: p.price, stock: p.stock,
+                    isService: p.isService, barcode: p.barcode, sku: p.sku,
+                    sellByWeight: true
+                });
+            }
+            addToCart(p.id, line.qty || 1, {
+                name: line.name,
+                price: line.price,
+                lineKey: `${p.id}-scale-${code}-${Date.now()}`,
+                weighted: true,
+                weightKg: line.weightKg || data.weightKg || 0,
+                stockQty: line.stockQty || 0
+            });
+            toast(line.name, 'success');
+            return true;
+        } catch {
+            return false;
+        }
+    }
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -4059,14 +5298,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { setupActions(); } catch (e) { console.error('setupActions', e); }
         try { setupTools(); } catch (e) { console.error('setupTools', e); }
         try { setupSignalR(); } catch (e) { console.error('setupSignalR', e); }
+        // Hardware scale lives on the `scale` branch.
 
-        const saved = sessionStorage.getItem('otargi_user');
+        const saved = sessionStorage.getItem('generic_user') || sessionStorage.getItem('panache_user') || sessionStorage.getItem('otargi_user');
         if (saved) {
             try {
                 currentUser = JSON.parse(saved);
                 showApp();
                 await loadData();
             } catch {
+                sessionStorage.removeItem('generic_user');
+                sessionStorage.removeItem('panache_user');
                 sessionStorage.removeItem('otargi_user');
             }
         }

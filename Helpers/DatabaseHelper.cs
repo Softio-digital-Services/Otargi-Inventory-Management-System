@@ -261,6 +261,7 @@ namespace InventorySystem
                         is_inactive         INTEGER DEFAULT 0,
                         tax_rate            REAL DEFAULT 0,
                         is_stock_tracked    INTEGER DEFAULT 1,
+                        sell_by_weight      INTEGER DEFAULT 0,
                         price2              REAL DEFAULT 0,
                         price3              REAL DEFAULT 0,
                         price4              REAL DEFAULT 0
@@ -366,6 +367,11 @@ namespace InventorySystem
                         category_id INTEGER PRIMARY KEY AUTOINCREMENT,
                         category_name TEXT NOT NULL UNIQUE
                     );
+
+                    CREATE TABLE IF NOT EXISTS units_of_measure (
+                        unit_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        unit_name TEXT NOT NULL UNIQUE
+                    );
                 ";
 
                 // SQLite doesn't support multiple statements in one call -- split them
@@ -387,6 +393,7 @@ namespace InventorySystem
                 if (!ColumnExists("parts", "is_inactive")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN is_inactive INTEGER DEFAULT 0;");
                 if (!ColumnExists("parts", "tax_rate")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN tax_rate REAL DEFAULT 0;");
                 if (!ColumnExists("parts", "is_stock_tracked")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN is_stock_tracked INTEGER DEFAULT 1;");
+                if (!ColumnExists("parts", "sell_by_weight")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN sell_by_weight INTEGER DEFAULT 0;");
                 if (!ColumnExists("parts", "price2")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN price2 REAL DEFAULT 0;");
                 if (!ColumnExists("parts", "price3")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN price3 REAL DEFAULT 0;");
                 if (!ColumnExists("parts", "price4")) ExecuteNonQuery("ALTER TABLE parts ADD COLUMN price4 REAL DEFAULT 0;");
@@ -421,6 +428,20 @@ namespace InventorySystem
             }
             catch { }
             return false;
+        }
+
+        /// <summary>
+        /// Deletes the SQLite database file and WAL/SHM sidecars after closing pooled connections.
+        /// </summary>
+        public static void DeleteDatabaseFiles(string dbFile)
+        {
+            if (string.IsNullOrWhiteSpace(dbFile)) return;
+            SqliteConnection.ClearAllPools();
+            foreach (string path in new[] { dbFile, dbFile + "-wal", dbFile + "-shm" })
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
         }
     }
 }

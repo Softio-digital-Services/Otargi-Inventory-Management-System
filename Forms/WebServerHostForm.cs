@@ -33,7 +33,8 @@ namespace InventorySystem
         private Rectangle _restoreBounds;
         private Task<CoreWebView2Environment> _envTask;
 
-        private const int WM_NCLBUTTONDOWN = 0xA1;
+        private const int WM_SYSCOMMAND = 0x112;
+        private const int SC_MOVE = 0xF010;
         private const int HTCAPTION = 0x2;
 
         [DllImport("user32.dll")] private static extern bool ReleaseCapture();
@@ -221,6 +222,53 @@ namespace InventorySystem
             PostWindowState();
         }
 
+        /// <summary>
+        /// Starts a native window move from the web title bar. If the host is
+        /// "maximized" (fitted to the working area), restores under the cursor first
+        /// so the window can be dragged onto another monitor.
+        /// </summary>
+        private void BeginTitleBarDrag()
+        {
+            if (_isMaximized)
+            {
+                Point cursor = Cursor.Position;
+                Rectangle restore = _restoreBounds;
+                if (restore.Width < MinimumSize.Width || restore.Height < MinimumSize.Height)
+                {
+                    Rectangle wa = Screen.FromPoint(cursor).WorkingArea;
+                    restore = new Rectangle(
+                        wa.X + Math.Max(40, (wa.Width - 1280) / 2),
+                        wa.Y + Math.Max(40, (wa.Height - 800) / 2),
+                        Math.Min(1280, Math.Max(MinimumSize.Width, wa.Width - 80)),
+                        Math.Min(800, Math.Max(MinimumSize.Height, wa.Height - 80)));
+                }
+
+                double ratio = (double)(cursor.X - Bounds.Left) / Math.Max(1, Bounds.Width);
+                ratio = Math.Max(0.05, Math.Min(0.95, ratio));
+                int newX = cursor.X - (int)(restore.Width * ratio);
+                int newY = cursor.Y - 26; // keep pointer in the title-bar band
+
+                Rectangle targetScreen = Screen.FromPoint(cursor).WorkingArea;
+                newX = Math.Max(targetScreen.Left - restore.Width + 80,
+                    Math.Min(newX, targetScreen.Right - 80));
+                newY = Math.Max(targetScreen.Top,
+                    Math.Min(newY, targetScreen.Bottom - 80));
+
+                Bounds = new Rectangle(newX, newY, restore.Width, restore.Height);
+                _isMaximized = false;
+                _restoreBounds = Bounds;
+                PostWindowState();
+            }
+
+            // Steal mouse capture from WebView2 while the button is still down,
+            // then enter the native move loop (same pattern as MainForm title drag).
+            try { if (_webView != null && !_webView.IsDisposed) _webView.Capture = false; } catch { }
+            Capture = false;
+            ReleaseCapture();
+            // SC_MOVE | HTCAPTION — more reliable than WM_NCLBUTTONDOWN alone with WebView2
+            SendMessage(Handle, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+        }
+
         private async Task InitializeAsync()
         {
             try
@@ -335,6 +383,19 @@ namespace InventorySystem
                         openUrl = u.GetString();
                 }
 
+                // Drag must run synchronously while the left mouse button is still down.
+                // BeginInvoke is too late — WebView2 has already finished the click by then.
+                if (action == "drag")
+                {
+                    void DoDrag()
+                    {
+                        try { BeginTitleBarDrag(); } catch { }
+                    }
+                    if (InvokeRequired) Invoke((Action)DoDrag);
+                    else DoDrag();
+                    return;
+                }
+
                 BeginInvoke(new Action(() =>
                 {
                     switch (action)
@@ -360,11 +421,6 @@ namespace InventorySystem
                                 }
                                 catch { }
                             }
-                            break;
-                        case "drag":
-                            if (_isMaximized) break;
-                            ReleaseCapture();
-                            SendMessage(Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
                             break;
                         case "beginPrint":
                             SetPrintUiInset(true);
@@ -434,11 +490,29 @@ namespace InventorySystem
                 }
                 catch { }
 
-                var namesJson = string.Join(",", printers.Select(p =>
-                    "\"" + p.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\""));
-                var defEsc = (defaultPrinter ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+                var profiles = new Dictionary<string, object>();
+                foreach (var name in printers)
+                {
+                    var p = PrinterProfileStore.Get(name);
+                    profiles[name] = new
+                    {
+                        receiptProtocol = p.ReceiptProtocol ?? "auto",
+                        labelProtocol = p.LabelProtocol ?? "auto",
+                        labelWidthMm = p.LabelWidthMm,
+                        labelHeightMm = p.LabelHeightMm,
+                        labelGapMm = p.LabelGapMm
+                    };
+                }
+
+                var payload = new
+                {
+                    type = "printers",
+                    printers,
+                    defaultPrinter = defaultPrinter ?? "",
+                    profiles
+                };
                 _webView?.CoreWebView2?.PostWebMessageAsJson(
-                    $"{{\"type\":\"printers\",\"printers\":[{namesJson}],\"defaultPrinter\":\"{defEsc}\"}}");
+                    JsonSerializer.Serialize(payload));
             }
             catch { }
         }
@@ -484,6 +558,14 @@ namespace InventorySystem
                 var options = new LabelPrintOptions();
                 if (root.TryGetProperty("printerName", out var pn) && pn.ValueKind == JsonValueKind.String)
                     options.PrinterName = pn.GetString();
+                if (root.TryGetProperty("protocol", out var proto) && proto.ValueKind == JsonValueKind.String)
+                    options.Protocol = proto.GetString();
+                if (root.TryGetProperty("labelWidthMm", out var lw) && lw.ValueKind == JsonValueKind.Number)
+                    options.LabelWidthMm = lw.GetDouble();
+                if (root.TryGetProperty("labelHeightMm", out var lh) && lh.ValueKind == JsonValueKind.Number)
+                    options.LabelHeightMm = lh.GetDouble();
+                if (root.TryGetProperty("labelGapMm", out var lg) && lg.ValueKind == JsonValueKind.Number)
+                    options.LabelGapMm = lg.GetDouble();
                 if (root.TryGetProperty("copies", out var c) && c.ValueKind == JsonValueKind.Number)
                     options.Copies = Math.Max(1, Math.Min(99, c.GetInt32()));
                 if (root.TryGetProperty("landscape", out var ls))
@@ -522,6 +604,8 @@ namespace InventorySystem
                     options.CurrencySymbol = cs.GetString() ?? "$";
                 if (root.TryGetProperty("printerName", out var pn) && pn.ValueKind == JsonValueKind.String)
                     options.PrinterName = pn.GetString();
+                if (root.TryGetProperty("protocol", out var proto) && proto.ValueKind == JsonValueKind.String)
+                    options.Protocol = proto.GetString();
                 if (root.TryGetProperty("copies", out var c) && c.ValueKind == JsonValueKind.Number)
                     options.Copies = Math.Max(1, Math.Min(99, c.GetInt32()));
                 if (root.TryGetProperty("landscape", out var ls))

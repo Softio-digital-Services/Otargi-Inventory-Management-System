@@ -20,8 +20,8 @@ namespace InventorySystem
         // ==========================================
         // BRANDING
         // ==========================================
-        public static string CompanyName { get; set; } = "Generic Solutions";
-        public static string AppTitle { get; set; } = "GenericInventorySystem1.1";
+        public static string CompanyName { get; set; } = "Otarji";
+        public static string AppTitle { get; set; } = "Otargi Inventory";
 
         // Loaded from appsettings.json SystemBranding.PrimaryColor (default emerald #10B981)
         private static Color _primaryColor = Color.FromArgb(16, 185, 129);
