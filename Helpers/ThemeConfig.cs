@@ -20,24 +20,14 @@ namespace InventorySystem
         // ==========================================
         // BRANDING
         // ==========================================
-        public static string CompanyName { get; set; } = "Otarji";
+        public static string CompanyName { get; set; } = "Otargi";
         public static string AppTitle { get; set; } = "Otargi Inventory";
-
-        // Loaded from appsettings.json SystemBranding.PrimaryColor (default emerald #10B981)
-        private static Color _primaryColor = Color.FromArgb(16, 185, 129);
-        private static Color _primaryHoverColor = Color.FromArgb(5, 150, 105);
-        private static Color _gradientStart = Color.FromArgb(52, 211, 153);
-        private static Color _gradientEnd = Color.FromArgb(16, 185, 129);
-        private static Color _headerColor = Color.FromArgb(16, 185, 129);
-        private static Color _activeBackColor = Color.FromArgb(236, 253, 245);
 
         static ThemeConfig()
         {
             try
             {
                 string configPath = "appsettings.json";
-                if (!File.Exists(configPath))
-                    configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
                 if (File.Exists(configPath))
                 {
                     string jsonString = File.ReadAllText(configPath);
@@ -50,37 +40,24 @@ namespace InventorySystem
                             
                             if (branding.TryGetProperty("AppName", out JsonElement appName))
                                 AppTitle = appName.GetString() ?? AppTitle;
-
-                            if (branding.TryGetProperty("PrimaryColor", out JsonElement primaryHex))
-                            {
-                                var parsed = ColorTranslator.FromHtml(primaryHex.GetString() ?? "#10B981");
-                                _primaryColor = parsed;
-                                _headerColor = parsed;
-                                _primaryHoverColor = ControlPaint.Dark(parsed, 0.12f);
-                                _gradientStart = ControlPaint.Light(parsed, 0.15f);
-                                _gradientEnd = parsed;
-                                _activeBackColor = Color.FromArgb(255,
-                                    Math.Min(255, parsed.R + (255 - parsed.R) * 9 / 10),
-                                    Math.Min(255, parsed.G + (255 - parsed.G) * 9 / 10),
-                                    Math.Min(255, parsed.B + (255 - parsed.B) * 9 / 10));
-                            }
                         }
                     }
                 }
             }
-            catch { /* Fallback to Otargi red defaults */ }
+            catch { /* Fallback to default generic names */ }
         }
 
         // ==========================================
-        // COLOR PALETTE (Otargi brand from appsettings)
+        // COLOR PALETTE (Light / Horizon Blue)
         // ==========================================
         
-        public static Color PrimaryColor => _primaryColor;
-        public static Color PrimaryHoverColor => _primaryHoverColor;
+        // Primary Brand Color (Otargi green)
+        public static Color PrimaryColor { get; } = Color.FromArgb(16, 185, 129); // #10B981
+        public static Color PrimaryHoverColor { get; } = Color.FromArgb(5, 150, 105); // #059669
 
         // Gradient Colors for Primary Buttons
-        public static Color GradientStart => _gradientStart;
-        public static Color GradientEnd => _gradientEnd;
+        public static Color GradientStart { get; } = Color.FromArgb(52, 211, 153); // #34D399
+        public static Color GradientEnd { get; } = Color.FromArgb(16, 185, 129);   // #10B981
 
         // Secondary / Text Colors
         public static Color SecondaryColor { get; } = Color.FromArgb(100, 116, 139); // Slate Gray
@@ -92,8 +69,8 @@ namespace InventorySystem
         // Backgrounds
         public static Color BackgroundColor { get; } = Color.FromArgb(241, 245, 249); 
         public static Color SidebarColor { get; } = Color.FromArgb(248, 250, 252);     
-        public static Color HeaderColor => _headerColor;
-        public static Color ActiveBackColor => _activeBackColor; 
+        public static Color HeaderColor { get; } = Color.FromArgb(16, 185, 129);      
+        public static Color ActiveBackColor { get; } = Color.FromArgb(236, 253, 245); 
 
         
         // Semantic Token Mapping
@@ -118,6 +95,12 @@ namespace InventorySystem
         public static Color SuccessBadgeText { get; } = Color.FromArgb(21, 128, 61); // Dark Green
         public static Color SuccessBorder { get; } = Color.FromArgb(34, 197, 94);   // Green-500
 
+        // Standard action button colors (outline: text + border only)
+        public static Color ActionImportColor { get; } = Color.FromArgb(30, 64, 175);   // Dark Blue #1E40AF
+        public static Color ActionExportColor { get; } = Color.FromArgb(251, 146, 60);  // Light Orange #FB923C
+        public static Color ActionAddColor { get; } = Color.FromArgb(74, 222, 128);     // Light Green #4ADE80
+        public static Color ActionRefreshColor { get; } = Color.FromArgb(4, 120, 87);   // Dark Green #047857
+
         public static Color DangerBadgeBg { get; } = Color.FromArgb(254, 242, 242);  // Light Red
         public static Color DangerBadgeText { get; } = Color.FromArgb(185, 28, 28);  // Dark Red
         public static Color DangerBorder { get; } = Color.FromArgb(239, 68, 68);    // Red-500
@@ -141,8 +124,8 @@ namespace InventorySystem
         public static Color POS_SidebarBg { get; } = Color.FromArgb(248, 249, 251);
         public static Color POS_CartItemBg { get; } = Color.FromArgb(248, 250, 252);
         public static Color POS_SeparatorColor { get; } = Color.FromArgb(235, 237, 240);
-        public static Color POS_ChipActive { get; } = Color.FromArgb(16, 185, 129);
-        public static Color POS_ChipActiveBorder { get; } = Color.FromArgb(5, 150, 105);
+        public static Color POS_ChipActive { get; } = Color.FromArgb(37, 99, 235);
+        public static Color POS_ChipActiveBorder { get; } = Color.FromArgb(29, 78, 216);
 
 
         // ==========================================
@@ -328,16 +311,15 @@ namespace InventorySystem
             btn.Tag = "standard_add";
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 0;
-            btn.BackColor = PrimaryColor;
+            btn.BackColor = Color.Transparent;
             btn.Height = 35;
             btn.ForeColor = Color.Transparent;
             btn.Font = SmallBoldFont;
             btn.Cursor = Cursors.Hand;
             btn.UseVisualStyleBackColor = false;
-            btn.FlatAppearance.MouseOverBackColor = PrimaryHoverColor;
-            btn.FlatAppearance.MouseDownBackColor = PrimaryHoverColor;
+            btn.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            btn.FlatAppearance.MouseDownBackColor = Color.Transparent;
             
-            // Suppress native text shadows completely
             btn.Text = "";
             if (localizationKey != null)
             {
@@ -345,24 +327,21 @@ namespace InventorySystem
                 _standardButtonKeys.Add(btn, localizationKey);
             }
 
-            btn.MouseEnter -= StandardAdd_MouseEnter;
-            btn.MouseEnter += StandardAdd_MouseEnter;
-            btn.MouseLeave -= StandardAdd_MouseLeave;
-            btn.MouseLeave += StandardAdd_MouseLeave;
+            btn.MouseEnter -= StandardOutline_MouseEnter;
+            btn.MouseEnter += StandardOutline_MouseEnter;
+            btn.MouseLeave -= StandardOutline_MouseLeave;
+            btn.MouseLeave += StandardOutline_MouseLeave;
 
             btn.Paint -= StandardAdd_Paint;
             btn.Paint += StandardAdd_Paint;
         }
-
-        private static void StandardAdd_MouseEnter(object s, EventArgs e) { if (s is Button b) { b.BackColor = PrimaryHoverColor; b.Invalidate(); } }
-        private static void StandardAdd_MouseLeave(object s, EventArgs e) { if (s is Button b) { b.BackColor = PrimaryColor; b.Invalidate(); } }
 
         private static void StandardAdd_Paint(object s, PaintEventArgs e)
         {
             if (s is Button btn)
             {
                 _standardButtonKeys.TryGetValue(btn, out string key);
-                DrawIconButton(btn, e.Graphics, "add", key, Color.White, PrimaryColor, false);
+                DrawIconButton(btn, e.Graphics, "add", key, ActionAddColor, ActionAddColor, true);
             }
         }
 
@@ -372,14 +351,14 @@ namespace InventorySystem
             btn.Tag = "success_add";
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 0;
-            btn.BackColor = PrimaryColor;
+            btn.BackColor = Color.Transparent;
             btn.Height = 35;
             btn.ForeColor = Color.Transparent;
             btn.Font = SmallBoldFont;
             btn.Cursor = Cursors.Hand;
             btn.UseVisualStyleBackColor = false;
-            btn.FlatAppearance.MouseOverBackColor = PrimaryHoverColor;
-            btn.FlatAppearance.MouseDownBackColor = PrimaryHoverColor;
+            btn.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            btn.FlatAppearance.MouseDownBackColor = Color.Transparent;
             
             btn.Text = "";
             if (localizationKey != null)
@@ -388,24 +367,21 @@ namespace InventorySystem
                 _standardButtonKeys.Add(btn, localizationKey);
             }
 
-            btn.MouseEnter -= SuccessAdd_MouseEnter;
-            btn.MouseEnter += SuccessAdd_MouseEnter;
-            btn.MouseLeave -= SuccessAdd_MouseLeave;
-            btn.MouseLeave += SuccessAdd_MouseLeave;
+            btn.MouseEnter -= StandardOutline_MouseEnter;
+            btn.MouseEnter += StandardOutline_MouseEnter;
+            btn.MouseLeave -= StandardOutline_MouseLeave;
+            btn.MouseLeave += StandardOutline_MouseLeave;
 
             btn.Paint -= SuccessAdd_Paint;
             btn.Paint += SuccessAdd_Paint;
         }
-
-        private static void SuccessAdd_MouseEnter(object s, EventArgs e) { if (s is Button b) { b.BackColor = PrimaryHoverColor; b.Invalidate(); } }
-        private static void SuccessAdd_MouseLeave(object s, EventArgs e) { if (s is Button b) { b.BackColor = PrimaryColor; b.Invalidate(); } }
 
         private static void SuccessAdd_Paint(object s, PaintEventArgs e)
         {
             if (s is Button btn)
             {
                 _standardButtonKeys.TryGetValue(btn, out string key);
-                DrawIconButton(btn, e.Graphics, "add", key, Color.White, PrimaryColor, false);
+                DrawIconButton(btn, e.Graphics, "add", key, ActionAddColor, ActionAddColor, true);
             }
         }
 
@@ -490,7 +466,87 @@ namespace InventorySystem
             if (s is Button btn)
             {
                 _standardButtonKeys.TryGetValue(btn, out string key);
-                DrawIconButton(btn, e.Graphics, "refresh", key, SuccessColor, SuccessColor, true);
+                DrawIconButton(btn, e.Graphics, "refresh", key, ActionRefreshColor, ActionRefreshColor, true);
+            }
+        }
+
+        public static void ApplyStandardImportButton(Button btn, string localizationKey = null)
+        {
+            if (btn == null) return;
+            btn.Tag = "standard_import";
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.BackColor = Color.Transparent;
+            btn.Height = 35;
+            btn.ForeColor = Color.Transparent;
+            btn.Font = SmallBoldFont;
+            btn.Cursor = Cursors.Hand;
+            btn.UseVisualStyleBackColor = false;
+            btn.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            btn.FlatAppearance.MouseDownBackColor = Color.Transparent;
+
+            btn.Text = "";
+            if (localizationKey != null)
+            {
+                _standardButtonKeys.Remove(btn);
+                _standardButtonKeys.Add(btn, localizationKey);
+            }
+
+            btn.MouseEnter -= StandardOutline_MouseEnter;
+            btn.MouseEnter += StandardOutline_MouseEnter;
+            btn.MouseLeave -= StandardOutline_MouseLeave;
+            btn.MouseLeave += StandardOutline_MouseLeave;
+
+            btn.Paint -= StandardImport_Paint;
+            btn.Paint += StandardImport_Paint;
+        }
+
+        private static void StandardImport_Paint(object s, PaintEventArgs e)
+        {
+            if (s is Button btn)
+            {
+                _standardButtonKeys.TryGetValue(btn, out string key);
+                DrawIconButton(btn, e.Graphics, "import", key, ActionImportColor, ActionImportColor, true);
+            }
+        }
+
+        public static void ApplyStandardExportButton(Button btn, string localizationKey = null)
+        {
+            if (btn == null) return;
+            btn.Tag = "standard_export";
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.BackColor = Color.Transparent;
+            btn.Height = 35;
+            btn.ForeColor = Color.Transparent;
+            btn.Font = SmallBoldFont;
+            btn.Cursor = Cursors.Hand;
+            btn.UseVisualStyleBackColor = false;
+            btn.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            btn.FlatAppearance.MouseDownBackColor = Color.Transparent;
+
+            btn.Text = "";
+            if (localizationKey != null)
+            {
+                _standardButtonKeys.Remove(btn);
+                _standardButtonKeys.Add(btn, localizationKey);
+            }
+
+            btn.MouseEnter -= StandardOutline_MouseEnter;
+            btn.MouseEnter += StandardOutline_MouseEnter;
+            btn.MouseLeave -= StandardOutline_MouseLeave;
+            btn.MouseLeave += StandardOutline_MouseLeave;
+
+            btn.Paint -= StandardExport_Paint;
+            btn.Paint += StandardExport_Paint;
+        }
+
+        private static void StandardExport_Paint(object s, PaintEventArgs e)
+        {
+            if (s is Button btn)
+            {
+                _standardButtonKeys.TryGetValue(btn, out string key);
+                DrawIconButton(btn, e.Graphics, "export", key, ActionExportColor, ActionExportColor, true);
             }
         }
 
@@ -815,7 +871,7 @@ namespace InventorySystem
             btn.Paint -= WinCtrl_PaintMaximize;
             btn.Paint -= WinCtrl_PaintClose;
 
-            bool isDarkHeader = false;
+            bool isDarkHeader = (btn.FindForm() is MainForm);
             Color defaultHover = isDarkHeader ? Color.FromArgb(40, 255, 255, 255) : Color.FromArgb(30, PrimaryColor);
             Color closeHover = DangerColor; 
 
@@ -847,7 +903,7 @@ namespace InventorySystem
             }
             int cx = btn.Width / 2, cy = btn.Height / 2;
             int lineW = 6;
-            bool isDarkHeader = false;
+            bool isDarkHeader = (btn.FindForm() is MainForm);
             Color iconColor = isDarkHeader ? Color.White : ThemeConfig.TextColorDark;
             using (var p = new Pen(iconColor, 1.5f) { StartCap = System.Drawing.Drawing2D.LineCap.Round, EndCap = System.Drawing.Drawing2D.LineCap.Round })
                 g.DrawLine(p, cx - lineW, cy, cx + lineW, cy);
@@ -866,7 +922,7 @@ namespace InventorySystem
             }
             int cx = btn.Width / 2, cy = btn.Height / 2;
             bool isRestore = (btn.Tag as string) == "Restore";
-            bool isDarkHeader = false;
+            bool isDarkHeader = (btn.FindForm() is MainForm);
             Color iconColor = isDarkHeader ? Color.White : ThemeConfig.TextColorDark;
             using (var p = new Pen(iconColor, 1.5f))
             {
@@ -898,7 +954,7 @@ namespace InventorySystem
 
             int cx = btn.Width / 2, cy = btn.Height / 2;
             int s = 4; 
-            bool isDarkHeader = false;
+            bool isDarkHeader = (btn.FindForm() is MainForm);
             Color iconColor = isDarkHeader ? Color.White : ThemeConfig.TextColorDark;
             
             if (btn.BackColor == DangerColor) iconColor = Color.White;
@@ -1147,46 +1203,29 @@ namespace InventorySystem
             g.DrawPath(pen, path);
         }
 
-        public static void ApplyPrintPreviewTheme(PrintPreviewDialog preview, bool autoZoom = true, double zoom = 1.0, float sizeFactor = 1f)
+        public static void ApplyPrintPreviewTheme(PrintPreviewDialog preview)
         {
             if (preview == null) return;
 
-            Rectangle workingArea = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 720);
-            try
-            {
-                if (preview.Owner != null)
-                    workingArea = Screen.FromControl(preview.Owner).WorkingArea;
-            }
-            catch { }
+            Rectangle workingArea = Screen.PrimaryScreen.WorkingArea;
             preview.FormBorderStyle = FormBorderStyle.None;
             preview.BackColor = Color.White;
             preview.ShowIcon = false;
             preview.WindowState = FormWindowState.Normal;
-
-            sizeFactor = Math.Clamp(sizeFactor, 0.4f, 1f);
             
-            // A4 Ratio (210:297) - Approx 1:1.41 — keep clear margin from taskbar & screen edges
-            int targetHeight = (int)(workingArea.Height * 0.82 * sizeFactor);
+            // A4 Ratio (210:297) - Approx 1:1.41
+            int targetHeight = (int)(workingArea.Height * 0.85);
             int targetWidth = (int)(targetHeight / 1.414);
             
             // Limit width if it exceeds screen
-            if (targetWidth > workingArea.Width * 0.88 * sizeFactor)
+            if (targetWidth > workingArea.Width * 0.9)
             {
-                targetWidth = (int)(workingArea.Width * 0.88 * sizeFactor);
+                targetWidth = (int)(workingArea.Width * 0.9);
                 targetHeight = (int)(targetWidth * 1.414);
             }
 
-            // Cap so top & bottom gutters stay similar
-            targetHeight = Math.Min(targetHeight, workingArea.Height - 48);
-            targetWidth = Math.Min(targetWidth, workingArea.Width - 48);
-
-            int minW = sizeFactor < 0.75f ? 420 : 480;
-            int minH = sizeFactor < 0.75f ? 480 : 560;
-            preview.Size = new Size(Math.Max(minW, targetWidth), Math.Max(minH, targetHeight));
-            preview.StartPosition = FormStartPosition.Manual;
-            preview.Location = new Point(
-                workingArea.Left + (workingArea.Width - preview.Width) / 2,
-                workingArea.Top + (workingArea.Height - preview.Height) / 2);
+            preview.Size = new Size(targetWidth, targetHeight);
+            preview.StartPosition = FormStartPosition.CenterParent;
 
             // Internal components
             ToolStrip ts = null;
@@ -1263,10 +1302,9 @@ namespace InventorySystem
                 ppc.Dock = DockStyle.None;
                 ppc.Location = new Point(8, 92); // Inset from left/right to protect borders
                 ppc.Size = new Size(preview.Width - 16, preview.Height - 100);
+                ppc.Zoom = 1.0;
                 ppc.Columns = 1;
-                // AutoZoom stretches tiny label pages to full width — allow fixed zoom for labels
-                ppc.AutoZoom = autoZoom;
-                ppc.Zoom = zoom > 0 ? zoom : 1.0;
+                ppc.AutoZoom = true;
             }
 
             // 4. Painting (Header & Neon Border)
@@ -1599,7 +1637,7 @@ namespace InventorySystem
                     Color c2 = Color.FromArgb(147, 51, 234); 
 
                     // Specific colors based on icon type
-                    if (name == "refresh") { c1 = Color.FromArgb(5, 205, 153); c2 = Color.FromArgb(16, 185, 129); }
+                    if (name == "refresh") { c1 = Color.FromArgb(5, 205, 153); c2 = Color.FromArgb(37, 99, 235); }
                     else if (name.Contains("import")) { c1 = Color.FromArgb(22, 163, 74); c2 = Color.FromArgb(20, 184, 166); } 
                     else if (name.Contains("export")) { c1 = Color.FromArgb(37, 99, 235); c2 = Color.FromArgb(6, 182, 212); } 
                     else if (name.Contains("filter")) { c1 = Color.FromArgb(249, 115, 22); c2 = Color.FromArgb(236, 72, 153); }
@@ -1614,15 +1652,15 @@ namespace InventorySystem
                     else if (name == "inventory") { c1 = Color.FromArgb(99, 102, 241); c2 = Color.FromArgb(168, 85, 247); }
                     else if (name == "customers") { c1 = Color.FromArgb(59, 130, 246); c2 = Color.FromArgb(37, 99, 235); }
                     else if (name == "suppliers") { c1 = Color.FromArgb(20, 184, 166); c2 = Color.FromArgb(13, 148, 136); }
-                    else if (name == "reports") { c1 = Color.FromArgb(16, 185, 129); c2 = Color.FromArgb(5, 150, 105); }
+                    else if (name == "reports") { c1 = Color.FromArgb(37, 99, 235); c2 = Color.FromArgb(29, 78, 216); }
                     else if (name == "history" || name == "expenses") { c1 = Color.FromArgb(244, 63, 94); c2 = Color.FromArgb(225, 29, 72); }
-                    else if (name == "quotations") { c1 = Color.FromArgb(16, 185, 129); c2 = Color.FromArgb(5, 150, 105); }
+                    else if (name == "quotations") { c1 = Color.FromArgb(37, 99, 235); c2 = Color.FromArgb(29, 78, 216); }
                     else if (name == "currencies") { c1 = Color.FromArgb(245, 158, 11); c2 = Color.FromArgb(217, 119, 6); }
                     else if (name == "user") { c1 = Color.FromArgb(79, 70, 229); c2 = Color.FromArgb(67, 56, 202); }
                     else if (name == "barcode") { c1 = Color.FromArgb(59, 130, 246); c2 = Color.FromArgb(139, 92, 246); }
                     else if (name == "engine") { c1 = Color.FromArgb(239, 68, 68); c2 = Color.FromArgb(185, 28, 28); }
                     else if (name == "brakes") { c1 = Color.FromArgb(249, 115, 22); c2 = Color.FromArgb(194, 65, 12); }
-                    else if (name == "accessories") { c1 = Color.FromArgb(16, 185, 129); c2 = Color.FromArgb(5, 150, 105); }
+                    else if (name == "accessories") { c1 = Color.FromArgb(37, 99, 235); c2 = Color.FromArgb(29, 78, 216); }
 
                     using (var brush = new LinearGradientBrush(new Rectangle(8, 8, 48, 48), c1, c2, 45f))
                     {

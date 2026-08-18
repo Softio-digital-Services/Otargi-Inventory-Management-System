@@ -372,6 +372,11 @@ namespace InventorySystem
                         unit_id INTEGER PRIMARY KEY AUTOINCREMENT,
                         unit_name TEXT NOT NULL UNIQUE
                     );
+
+                    CREATE TABLE IF NOT EXISTS app_settings (
+                        key TEXT PRIMARY KEY NOT NULL,
+                        value TEXT NOT NULL
+                    );
                 ";
 
                 // SQLite doesn't support multiple statements in one call -- split them
@@ -428,20 +433,6 @@ namespace InventorySystem
             }
             catch { }
             return false;
-        }
-
-        /// <summary>
-        /// Deletes the SQLite database file and WAL/SHM sidecars after closing pooled connections.
-        /// </summary>
-        public static void DeleteDatabaseFiles(string dbFile)
-        {
-            if (string.IsNullOrWhiteSpace(dbFile)) return;
-            SqliteConnection.ClearAllPools();
-            foreach (string path in new[] { dbFile, dbFile + "-wal", dbFile + "-shm" })
-            {
-                if (File.Exists(path))
-                    File.Delete(path);
-            }
         }
     }
 }

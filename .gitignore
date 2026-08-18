@@ -1,4 +1,4 @@
-# Build output (keep dist/ committed for run-ready exe + setup)
+# Build output
 bin/
 obj/
 publish/
@@ -11,6 +11,14 @@ build_output.txt
 *.userosscache
 *.sln.docstates
 
+# Legacy SQL Server LocalDB artifacts (app uses SQLite)
+Database/*.mdf
+Database/*.ldf
+Database/*.log
+Database/*.ps1
+Database/*.bat
+Database/*.sql
+
 # NuGet
 packages/
 *.nupkg
@@ -18,15 +26,18 @@ packages/
 # User-specific files
 *.rsuser
 
-# Local publish / installer scratch (outside dist/)
+# Publish and Installer output
 publish-output/
 InstallerOutput/
+# dist/ is tracked (shipped app + installer)
+dist/app-build/
+dist/app/Logs/
+dist/app/Data/*.db-shm
+dist/app/Data/*.db-wal
+scratch/
 
-# Debug symbols in published app (optional size save)
-dist/app/**/*.pdb
-
-# Local SQLite / certs (runtime)
+# Local backups / crash dumps
+_backup_pre_otargi_web/
+crash.txt
+server_error.txt
 *.db
-*.db-shm
-*.db-wal
-Database/

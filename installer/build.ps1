@@ -1,4 +1,4 @@
-# Otargi Inventory (Web) - Release + Installer build
+# Otargi Inventory - Release + Installer build
 # Usage: powershell -ExecutionPolicy Bypass -File .\installer\build.ps1
 
 $ErrorActionPreference = "Stop"
@@ -7,6 +7,12 @@ $publishDir = Join-Path $root "dist\app"
 $distDir = Join-Path $root "dist"
 $iss = Join-Path $PSScriptRoot "Otargi.iss"
 $csproj = Join-Path $root "OtargiInventorySystem.csproj"
+$makeIcon = Join-Path $PSScriptRoot "make-icon.ps1"
+
+if ((Test-Path $makeIcon) -and (Test-Path (Join-Path $root "Assets\logo.png"))) {
+    Write-Host "==> Refreshing icon.ico from logo.png..." -ForegroundColor Cyan
+    & $makeIcon
+}
 
 Write-Host "==> Publishing self-contained Release (win-x64)..." -ForegroundColor Cyan
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
@@ -15,7 +21,26 @@ New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 dotnet publish $csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 
-Write-Host "==> Looking for Inno Setup (ISCC)..." -ForegroundColor Cyan
+Write-Host "==> Publishing portable single-file exe..." -ForegroundColor Cyan
+$singleDir = Join-Path $root "dist\_single"
+$portableExe = Join-Path $distDir "OtargiInventory.exe"
+if (Test-Path $singleDir) { Remove-Item $singleDir -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $distDir | Out-Null
+New-Item -ItemType Directory -Force -Path $singleDir | Out-Null
+dotnet publish $csproj -c Release -r win-x64 --self-contained true `
+    -p:PublishSingleFile=true `
+    -p:IncludeNativeLibrariesForSelfExtract=true `
+    -p:IncludeAllContentForSelfExtract=true `
+    -p:EnableCompressionInSingleFile=true `
+    -o $singleDir
+if ($LASTEXITCODE -ne 0) { throw "dotnet publish (single-file) failed" }
+$publishedExe = Join-Path $singleDir "OtargiInventorySystem.exe"
+if (-not (Test-Path $publishedExe)) { throw "Single-file exe not found: $publishedExe" }
+Copy-Item $publishedExe $portableExe -Force
+Remove-Item $singleDir -Recurse -Force
+Write-Host "Portable app: $portableExe" -ForegroundColor Green
+
+Write-Host "==> Looking for Inno Setup 6.4+ (ISCC)..." -ForegroundColor Cyan
 $pf86 = ${env:ProgramFiles(x86)}
 $pf = $env:ProgramFiles
 $lad = $env:LocalAppData
@@ -31,7 +56,8 @@ $iscc = $isccCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Objec
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
 
 if ($iscc) {
-    Write-Host "==> Building Setup.exe with $iscc" -ForegroundColor Cyan
+    Write-Host "==> Building OtargiSetup.exe with $iscc" -ForegroundColor Cyan
+    Write-Host "    (Setup will auto-install WebView2 on PCs that need it)" -ForegroundColor DarkGray
     & $iscc $iss
     if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
     $setup = Get-ChildItem $distDir -Filter "OtargiSetup.exe" | Select-Object -First 1
@@ -39,6 +65,8 @@ if ($iscc) {
         Write-Host ""
         Write-Host "SUCCESS - give buyers this file:" -ForegroundColor Green
         Write-Host $setup.FullName -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Target PC needs: Windows 10/11 64-bit. WebView2 is installed by setup if missing." -ForegroundColor Cyan
     }
 }
 else {
@@ -52,4 +80,5 @@ else {
 
 Write-Host ""
 Write-Host "Published app folder: $publishDir"
+Write-Host "Portable exe: $(Join-Path $distDir 'OtargiInventory.exe')"
 Write-Host "Run locally: $(Join-Path $publishDir 'OtargiInventorySystem.exe')"
