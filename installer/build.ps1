@@ -7,12 +7,12 @@ $publishDir = Join-Path $root "dist\app"
 $distDir = Join-Path $root "dist"
 $iss = Join-Path $PSScriptRoot "Otargi.iss"
 $csproj = Join-Path $root "OtargiInventorySystem.csproj"
-$makeIcon = Join-Path $PSScriptRoot "make-icon.ps1"
+$iconIco = Join-Path $root "Assets\icon.ico"
 
-if ((Test-Path $makeIcon) -and (Test-Path (Join-Path $root "Assets\logo.png"))) {
-    Write-Host "==> Refreshing icon.ico from logo.png..." -ForegroundColor Cyan
-    & $makeIcon
+if (-not (Test-Path $iconIco)) {
+    throw "Missing Assets\icon.ico - required for app exe and setup icons"
 }
+Write-Host "==> Using Assets\icon.ico for app exe and setup" -ForegroundColor Cyan
 
 Write-Host "==> Publishing self-contained Release (win-x64)..." -ForegroundColor Cyan
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
