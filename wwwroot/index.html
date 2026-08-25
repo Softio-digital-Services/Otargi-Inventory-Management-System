@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Otargi Inventory</title>
@@ -19,11 +19,11 @@
         /* Inventory toolbar: search + scrollable actions with thin under slide bar */
         #inventory .page-search-row {
             display: flex !important;
-            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
             align-items: center !important;
+            justify-content: space-between !important;
             gap: 0.75rem !important;
-            min-width: 0 !important;
-            overflow: visible !important;
         }
         #inventory .page-search-row .search-box {
             flex: 0 0 148px !important;
@@ -56,9 +56,8 @@
             min-width: 0 !important;
             width: auto !important;
             max-width: none !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-            justify-content: flex-start !important;
+            margin-inline-start: auto !important;
+            justify-content: flex-end !important;
             overflow: visible !important;
             padding-block: 0 !important;
         }
@@ -128,9 +127,6 @@
             height: 1.15rem !important;
             flex-shrink: 0 !important;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20 !important;
-        }
-        body.rtl #inventory .inv-actions-scroller {
-            justify-content: flex-end !important;
         }
         @media (max-width: 900px) {
             #inventory .page-search-row {
@@ -466,12 +462,12 @@
                                     </div>
                                     <div class="scale-readout">
                                         <div class="scale-readout-item">
-                                            <span class="scale-readout-label" data-i18n="scale_weight_lbl">Weight (kg)</span>
+                                            <span class="scale-readout-label" data-i18n="scale_weight_lbl">Weight (g)</span>
                                             <div class="scale-weight-row">
-                                                <input type="number" class="scale-weight-input" id="scaleManualWeight" min="0" step="0.001" value="0" inputmode="decimal" data-i18n-title="weight_in_kg" data-i18n-aria="1" title="Weight in kg" aria-label="Weight in kg">
-                                                <small data-i18n="unit_kg">kg</small>
+                                                <input type="number" class="scale-weight-input" id="scaleManualWeight" min="0" step="1" value="0" inputmode="numeric" data-i18n-title="weight_in_g" data-i18n-aria="1" title="Weight in grams (g)" aria-label="Weight in grams (g)">
+                                                <small data-i18n="unit_g">g</small>
                                             </div>
-                                            <div class="scale-manual-hint" id="scaleManualHint" data-i18n="scale_manual_hint">Type kg here if the scale is offline</div>
+                                            <div class="scale-manual-hint" id="scaleManualHint" data-i18n="scale_manual_hint">Enter grams (g). Example: 1000 = 1.000 kg | 1250 = 1.250 kg</div>
                                         </div>
                                         <div class="scale-readout-item">
                                             <span class="scale-readout-label" data-i18n="scale_price_lbl">Price</span>
@@ -798,61 +794,65 @@
                     </div>
                 </div>
                 <div class="settings-layout">
-                <div class="card settings-card settings-card-wide" id="settings-general-card">
-                    <div class="settings-card-header">
-                        <span class="material-symbols-rounded" aria-hidden="true">tune</span>
-                        <h3 data-i18n="settings_general">General</h3>
+                    <div class="settings-grid-row">
+                        <div class="card settings-card" id="settings-general-card">
+                            <div class="settings-card-header">
+                                <span class="material-symbols-rounded" aria-hidden="true">tune</span>
+                                <h3 data-i18n="settings_general">General</h3>
+                            </div>
+                            <p class="form-hint settings-card-hint" data-i18n="settings_language_hint">Choose the app display language.</p>
+                            <div class="settings-lang-row">
+                                <span data-i18n="language">Language</span>
+                                <button type="button" class="btn btn-secondary" id="btn-settings-lang">
+                                    <span class="material-symbols-rounded">language</span>
+                                    <span id="settings-lang-label">English</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card settings-card" id="settings-license-card">
+                            <div class="settings-card-header">
+                                <span class="material-symbols-rounded" aria-hidden="true">vpn_key</span>
+                                <h3 data-i18n="license_info">License</h3>
+                            </div>
+                            <div class="settings-license-card-body">
+                            <div id="license-info" class="settings-license-body">
+                                <div class="empty-state">—</div>
+                            </div>
+                            <div class="settings-card-footer">
+                                <button type="button" class="btn btn-primary" id="btn-activate-license">
+                                    <span class="material-symbols-rounded">vpn_key</span>
+                                    <span data-i18n="activate_license">Activate License</span>
+                                </button>
+                            </div>
+                            </div>
+                        </div>
                     </div>
-                    <p class="form-hint settings-card-hint" data-i18n="settings_language_hint">Choose the app display language.</p>
-                    <div class="settings-lang-row">
-                        <span data-i18n="language">Language</span>
-                        <button type="button" class="btn btn-secondary" id="btn-settings-lang">
-                            <span class="material-symbols-rounded">language</span>
-                            <span id="settings-lang-label">English</span>
-                        </button>
+                    <div class="settings-grid-row">
+                        <div class="card settings-card" id="softio-scale-card" hidden>
+                            <div class="settings-card-header">
+                                <span class="material-symbols-rounded" aria-hidden="true">scale</span>
+                                <h3 data-i18n="feature_scale_title">Hardware Scale</h3>
+                            </div>
+                            <p class="form-hint settings-card-hint" data-i18n="feature_scale_hint">Only Softio Super Admin can enable sell-by-weight products and the POS scale panel.</p>
+                            <label class="p-check settings-check-row">
+                                <input type="checkbox" id="feature-scale-toggle">
+                                <span data-i18n="feature_scale_enable">Enable scale / sell-by-weight</span>
+                            </label>
+                            <p id="feature-scale-status" class="form-hint"></p>
+                        </div>
+                        <div class="card settings-card" id="softio-quicksale-card" hidden>
+                            <div class="settings-card-header">
+                                <span class="material-symbols-rounded" aria-hidden="true">bolt</span>
+                                <h3 data-i18n="feature_quicksale_title">Quick Sale</h3>
+                            </div>
+                            <p class="form-hint settings-card-hint" data-i18n="feature_quicksale_hint">Only Softio Super Admin can enable Quick Sale on the POS (sell without stock / custom items).</p>
+                            <label class="p-check settings-check-row">
+                                <input type="checkbox" id="feature-quicksale-toggle">
+                                <span data-i18n="feature_quicksale_enable">Enable Quick Sale</span>
+                            </label>
+                            <p id="feature-quicksale-status" class="form-hint"></p>
+                        </div>
                     </div>
-                </div>
-                <div class="card settings-card settings-card-wide" id="settings-license-card">
-                    <div class="settings-card-header">
-                        <span class="material-symbols-rounded" aria-hidden="true">vpn_key</span>
-                        <h3 data-i18n="license_info">License</h3>
-                    </div>
-                    <div class="settings-license-card-body">
-                    <div id="license-info" class="settings-license-body">
-                        <div class="empty-state">—</div>
-                    </div>
-                    <div class="settings-card-footer">
-                        <button type="button" class="btn btn-primary" id="btn-activate-license">
-                            <span class="material-symbols-rounded">vpn_key</span>
-                            <span data-i18n="activate_license">Activate License</span>
-                        </button>
-                    </div>
-                    </div>
-                </div>
-                <div class="card settings-card settings-card-wide" id="softio-scale-card" hidden>
-                    <div class="settings-card-header">
-                        <span class="material-symbols-rounded" aria-hidden="true">scale</span>
-                        <h3 data-i18n="feature_scale_title">Hardware Scale</h3>
-                    </div>
-                    <p class="form-hint settings-card-hint" data-i18n="feature_scale_hint">Only Softio Super Admin can enable sell-by-weight products and the POS scale panel.</p>
-                    <label class="p-check settings-check-row">
-                        <input type="checkbox" id="feature-scale-toggle">
-                        <span data-i18n="feature_scale_enable">Enable scale / sell-by-weight</span>
-                    </label>
-                    <p id="feature-scale-status" class="form-hint"></p>
-                </div>
-                <div class="card settings-card settings-card-wide" id="softio-quicksale-card" hidden>
-                    <div class="settings-card-header">
-                        <span class="material-symbols-rounded" aria-hidden="true">bolt</span>
-                        <h3 data-i18n="feature_quicksale_title">Quick Sale</h3>
-                    </div>
-                    <p class="form-hint settings-card-hint" data-i18n="feature_quicksale_hint">Only Softio Super Admin can enable Quick Sale on the POS (sell without stock / custom items).</p>
-                    <label class="p-check settings-check-row">
-                        <input type="checkbox" id="feature-quicksale-toggle">
-                        <span data-i18n="feature_quicksale_enable">Enable Quick Sale</span>
-                    </label>
-                    <p id="feature-quicksale-status" class="form-hint"></p>
-                </div>
                 <div class="card settings-card settings-card-wide" id="print-settings-card">
                     <div class="settings-card-header">
                         <span class="material-symbols-rounded" aria-hidden="true">print</span>
@@ -1045,7 +1045,7 @@
                             <label class="p-radio"><input type="radio" name="p-type" value="Product" checked> <span data-i18n="type_product">Product</span></label>
                             <label class="p-radio"><input type="radio" name="p-type" value="Service"> <span data-i18n="type_service">Service</span></label>
                         </fieldset>
-                        <fieldset class="p-fieldset" id="p-sell-by-fieldset" hidden>
+                        <fieldset class="p-fieldset" id="p-sell-by-fieldset">
                             <legend data-i18n="sell_by">How is this sold?</legend>
                             <label class="p-radio"><input type="radio" name="p-sell-by" value="piece" checked> <span data-i18n="sell_by_piece">Fixed price — piece, box, or pack</span></label>
                             <label class="p-radio"><input type="radio" name="p-sell-by" value="weight"> <span data-i18n="sell_by_weight">By weight — price per kilogram</span></label>
@@ -1409,7 +1409,8 @@
             <div id="license-activate-error" class="error-box"></div>
             <div class="modal-actions" style="flex-wrap:wrap;">
                 <button type="button" class="btn btn-secondary" id="btn-start-trial" data-i18n="start_trial">Start Trial</button>
-                <button type="button" class="btn btn-secondary" data-close="license-modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="btn-lic-cancel" data-close="license-modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-danger" id="btn-lic-close-app" style="display:none;" data-i18n="close_app">Exit Application</button>
                 <button type="button" class="btn btn-primary" id="btn-confirm-activate" data-i18n="activate_btn">Activate</button>
             </div>
         </div>

@@ -1008,6 +1008,12 @@
   <data name="Main_NoNotifications" xml:space="preserve">
     <value>لا توجد تنبيهات جديدة</value>
   </data>
+  <data name="Notif_LicenseExpiringTitle" xml:space="preserve">
+    <value>الترخيص سينتهي قريباً</value>
+  </data>
+  <data name="Notif_LicenseExpiringMsg" xml:space="preserve">
+    <value>تحذير: سينتهي ترخيصك خلال {0} أيام. يرجى تجديد مفتاح الترخيص.</value>
+  </data>
   <!-- Credits & Limits -->
   <data name="POS_PayLater" xml:space="preserve">
     <value>الدفع لاحقاً</value>

@@ -349,6 +349,13 @@ body.rtl .sidebar { border-right: none; border-left: 1px solid var(--border-colo
     margin-top: 2px;
 }
 
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-inline-start: auto;
+}
+
 .btn {
     padding: 11px 20px;
     border-radius: 12px;
@@ -938,6 +945,8 @@ tbody tr:hover { background: rgba(var(--primary-rgb), 0.03); }
 .badge.low-stock { background: #fff7ed; color: #c2410c; }
 .badge.out-of-stock { background: #fef2f2; color: #b91c1c; }
 .badge.service { background: rgba(var(--primary-rgb), 0.12); color: var(--primary-color); }
+.badge.badge-weight,
+.badge.weight { background: #e0f2fe; color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); }
 
 .filter-bar {
     display: flex;
@@ -4604,6 +4613,7 @@ body.rtl .titlebar-tools { direction: rtl; }
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
+    align-content: start;
 }
 #inv-cards[hidden],
 .inv-layout[hidden],
@@ -5450,4 +5460,101 @@ body.web-client:has(#pos.active) .main-content {
 @media (max-width: 900px) {
   .scale-readout { grid-template-columns: 1fr; }
 }
+
+/* Settings Layout */
+.settings-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.settings-grid-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+.settings-grid-row:has(> [hidden]:first-child:last-child),
+.settings-grid-row:empty {
+  display: none;
+}
+@media (max-width: 768px) {
+  .settings-grid-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Global Empty State Styling */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+  width: 100%;
+}
+.empty-state .material-symbols-rounded {
+  font-size: 3.5rem;
+  opacity: 0.45;
+  margin-bottom: 0.5rem;
+}
+
+/* POS Customer Box: remove grey background shape when debt is hidden or empty */
+.pos-customer-debt[hidden],
+.pos-customer-debt:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Arabic (RTL): position header window controls on the left side and invert button order (X [] _) so Close is at far left edge */
+body.rtl #titlebar,
+body.rtl .titlebar {
+  flex-direction: row-reverse !important;
+}
+body.rtl .window-controls {
+  flex-direction: row-reverse !important;
+}
+body.rtl #titlebar-tools {
+  margin-inline-start: 8px;
+  margin-inline-end: 8px;
+}
+
+/* Settings Page Alignment (Header text at start, action buttons at end) */
+.settings-page-header {
+  width: 100%;
+  text-align: start;
+}
+.settings-page-header > div {
+  text-align: start;
+}
+.settings-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.settings-save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Mandatory License Wall Blocking rules */
+#license-modal.license-wall-blocking {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+#license-modal.license-wall-blocking .close-btn {
+  display: none !important;
+}
+
 

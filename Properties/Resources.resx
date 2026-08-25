@@ -1061,6 +1061,12 @@
     <value>Logout?</value>
   </data>
   <data name="Main_NoNotifications" xml:space="preserve">    <value>No new notifications</value>  </data>
+  <data name="Notif_LicenseExpiringTitle" xml:space="preserve">
+    <value>License Expiring Soon</value>
+  </data>
+  <data name="Notif_LicenseExpiringMsg" xml:space="preserve">
+    <value>Warning: Your license will expire in {0} day(s). Please renew your license key.</value>
+  </data>
   <data name="POS_PayLater" xml:space="preserve">
     <value>Pay Later</value>
   </data>

@@ -109,7 +109,12 @@ namespace InventorySystem.Helpers
         /// </summary>
         public static LicenseKey GetCurrentLicense()
         {
-            return LicenseStorage.LoadLicense();
+            LicenseKey license = LicenseStorage.LoadLicense();
+            if (license == null)
+            {
+                license = StartTrial();
+            }
+            return license;
         }
 
         /// <summary>
